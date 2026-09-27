@@ -7,15 +7,130 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Product {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  category    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum Role {
+  CLIENTE
+  FUNCIONARIO
+  ADMIN
+}
 
-  @@map("products")
+enum Porte {
+  PEQUENO
+  MEDIO
+  GRANDE
+}
+
+enum TipoPlano {
+  BASICO
+  PADRAO
+  PREMIUM
+}
+
+model Fidelidade {
+  id             Int      @id @default(autoincrement())
+  beneficioAtivo Boolean
+  qntdServicos   Int
+  usuario        Usuario?
+
+  @@map("fidelidades")
+}
+
+model Usuario {
+  id           Int           @id @default(autoincrement())
+  email        String?       @unique
+  senhaHash    String        @map("senha_hash")
+  role         Role
+  cpf          String        @unique
+  nome         String
+  fidelidadeId Int           @unique @map("id_fidelidade")
+  fidelidade   Fidelidade    @relation(fields: [fidelidadeId], references: [id], onDelete: Restrict)
+  enderecos    Endereco[]
+  animais      Animal[]
+  assinaturas  Assinatura[]
+  agendamentos Agendamento[]
+
+  @@map("usuarios")
+}
+
+model Endereco {
+  id          Int     @id @default(autoincrement())
+  cep         String
+  complemento String?
+  bairro      String
+  numero      Int
+  rua         String
+  usuarioId   Int     @map("id_usuario")
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("enderecos")
+}
+
+model Animal {
+  id           Int           @id @default(autoincrement())
+  idade        Int
+  porte        Porte
+  especie      String
+  nome         String
+  usuarioId    Int           @map("id_usuario")
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  agendamentos Agendamento[]
+
+  @@map("animais")
+}
+
+model Plano {
+  id          Int          @id @default(autoincrement())
+  preco       Decimal      @db.Decimal(10, 2)
+  tipo        TipoPlano
+  assinaturas Assinatura[]
+
+  @@map("planos")
+}
+
+model Assinatura {
+  id            Int      @id @default(autoincrement())
+  servicosRest  Json?
+  dataAquisicao DateTime @db.Date
+  usuarioId     Int      @map("id_usuario")
+  planoId       Int      @map("id_plano")
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  plano         Plano    @relation(fields: [planoId], references: [id], onDelete: Restrict)
+
+  @@map("assinaturas")
+}
+
+model Servico {
+  id           Int           @id @default(autoincrement())
+  descricao    String?
+  duracaoMin   Int
+  preco        Decimal       @db.Decimal(10, 2)
+  nome         String
+  agendamentos Agendamento[]
+
+  @@map("servicos")
+}
+
+model Funcionario {
+  id           Int           @id @default(autoincrement())
+  nome         String
+  cargo        String
+  telefone     String?
+  agendamentos Agendamento[]
+
+  @@map("funcionarios")
+}
+
+model Agendamento {
+  id            Int         @id @default(autoincrement())
+  dataHoraIni   DateTime
+  dataHoraFim   DateTime
+  usuarioId     Int         @map("id_usuario")
+  animalId      Int         @map("id_animal")
+  servicoId     Int         @map("id_servico")
+  funcionarioId Int         @map("id_funcionario")
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  animal        Animal      @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  servico       Servico     @relation(fields: [servicoId], references: [id], onDelete: Restrict)
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Restrict)
+
+  @@map("agendamentos")
 }
