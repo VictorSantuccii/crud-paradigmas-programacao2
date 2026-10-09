@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PetExpress - O melhor amigo do seu pet</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Quicksand:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#24323f",
+                        "surface-bright": "#f7f9ff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#a4c9ff",
+                        "surface": "#f7f9ff",
+                        "primary-fixed-dim": "#a4c9ff",
+                        "on-tertiary-fixed-variant": "#00522b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#2e1500",
+                        "surface-container-high": "#dbeafc",
+                        "on-secondary-container": "#6b3900",
+                        "surface-container": "#e3efff",
+                        "on-primary-fixed-variant": "#004883",
+                        "on-primary-fixed": "#001c39",
+                        "primary-fixed": "#d4e3ff",
+                        "on-surface-variant": "#414751",
+                        "outline-variant": "#c1c7d3",
+                        "on-primary-container": "#fdfcff",
+                        "on-tertiary-fixed": "#00210e",
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "tertiary-container": "#00864a",
+                        "surface-container-low": "#edf4ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fc9d41",
+                        "on-background": "#0f1d29",
+                        "on-tertiary-container": "#f6fff4",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#d5e4f6",
+                        "outline": "#717783",
+                        "background": "#f7f9ff",
+                        "tertiary": "#006a39",
+                        "secondary": "#8f4e00",
+                        "surface-dim": "#cddbed",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#e8f2ff",
+                        "tertiary-fixed-dim": "#2ee285",
+                        "surface-variant": "#d5e4f6",
+                        "primary": "#005da7",
+                        "surface-tint": "#0060ac",
+                        "tertiary-fixed": "#5cff9f",
+                        "on-surface": "#0f1d29",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#ffb77a",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#2976c7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1200px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Montserrat"],
+                        "display-lg": ["Quicksand"],
+                        "headline-lg-mobile": ["Quicksand"],
+                        "label-md": ["Quicksand"],
+                        "headline-lg": ["Quicksand"],
+                        "body-lg": ["Montserrat"],
+                        "headline-md": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .soft-shadow {
+            box-shadow: 0 10px 25px rgba(0, 93, 167, 0.08);
+        }
+        .btn-hover-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-hover-effect::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .btn-hover-effect:hover::after {
+            transform: translateX(100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-x-hidden pt-20">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-20 max-w-container-max mx-auto bg-surface shadow-sm">
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pets</span>
+            PetExpress
+        </a>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Produtos</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Serviços</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Consultas</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200" href="#">Meus Pets</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="md:hidden p-2 text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative w-full overflow-hidden bg-surface-container-low pt-12 pb-24 md:pt-24 md:pb-32 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+<div class="z-10">
+<h1 class="text-headline-lg-mobile md:text-display-lg font-headline-lg-mobile md:font-display-lg text-on-surface mb-6">
+                        Tudo o que Seu Pet Precisa em um Só Lugar!
+                    </h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-8 max-w-lg">
+                        Produtos, Serviços e Consultas com Cuidado e Amor. Toda comodidade que você busca, com a qualidade que ele merece.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-primary text-on-primary font-label-md text-label-md py-4 px-8 rounded-full btn-hover-effect shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                            Agendar Agora
+                            <span class="material-symbols-outlined text-sm">calendar_month</span>
+</button>
+<button class="bg-surface text-primary border-2 border-primary font-label-md text-label-md py-4 px-8 rounded-full hover:bg-primary/5 transition-all active:scale-95 flex items-center justify-center gap-2">
+                            Explorar Produtos
+                        </button>
+</div>
+</div>
+<div class="relative h-[400px] md:h-[600px] w-full rounded-[2rem] overflow-hidden soft-shadow">
+<img alt="Cão sorridente" class="absolute inset-0 w-full h-full object-cover object-center" data-alt="A highly detailed photograph of a happy, fluffy dog smiling warmly in a bright, modern living room setting. The lighting is soft and natural, emphasizing a clean, light-mode aesthetic with a friendly, welcoming mood. The background is slightly blurred to keep the focus on the dog's joyful expression, reflecting a reliable and caring atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYTVbTk2ez8FAnz83pMU_u_s-zYfjs-gVpqrRXnH-dVoz5dL9x90UJSnNjsOlzB70NDRXTcCbauU8ybvea1oQAfmeN1sppdZRXl1rSHprZKu-DCoUfKew0iYtlX7ZNlXDsWqqZpEFnSk8LMp1U4DodSl3Esf5mtRem8Bk40QeLYl3pSveiPN0XTI65dOTpXDPH0bNiX5wOxhu61-kFANr6i_xq3lSs0YPpI549JUP7fz8Z9FsuP3qvcwYllw6ZOKzQPQ-J-aLtm7Ns"/>
+<!-- Decorative Element -->
+<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-secondary-container rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+<div class="absolute -top-6 -right-6 w-40 h-40 bg-tertiary-container rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-4">Nossos Serviços Especiais</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl mx-auto">Soluções completas para a saúde e felicidade do seu melhor amigo.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(250px,auto)]">
+<!-- Produtos -->
+<div class="md:col-span-2 relative rounded-2xl overflow-hidden soft-shadow bg-surface-container group cursor-pointer">
+<div class="absolute inset-0 z-0">
+<img alt="Produtos para pets" class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500" data-alt="A pristine, beautifully arranged selection of high-quality pet products including premium food bowls, toys, and grooming tools. The setting is clean, modern, and brightly lit with soft white light, reflecting a premium e-commerce style. The colors are balanced, complementing a fresh, friendly light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt5Vn3f5lG9lcfEtoE1Nj-Ta6sUhKxaiehSveTO80ogG_xZYtxy7CG9WQtR49NjmVvvtKrYZqCG2CCDY-SZm5ej-C1BQeOqKUx-7GVcvFBS5MR5-Q1F7rsj3OGujYVgqjfRMHZ_VYVIyfDJ2VXBFktJjCSM-iZX6YCFCeYiRj-UG8AwAPc732I8FFJYmCg13XKc00lXgRHOpdVMmdVl6mh_hO0vydcxNIfHZw2jU6pOqKcv_pgW3NNxfUx7veV8-uRd987wHsIlPR9"/>
+</div>
+<div class="relative z-10 p-8 h-full flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent">
+<div class="bg-primary/90 text-on-primary w-fit p-3 rounded-xl mb-4 backdrop-blur-sm">
+<span class="material-symbols-outlined">shopping_bag</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-white mb-2">Produtos Premium</h3>
+<p class="text-white/90 text-body-md font-body-md">Encontre tudo que seu pet precisa. Rações, brinquedos e acessórios das melhores marcas.</p>
+</div>
+</div>
+<!-- Banho e Tosa -->
+<div class="relative rounded-2xl overflow-hidden soft-shadow bg-tertiary-container/10 group cursor-pointer p-8 flex flex-col justify-between hover:bg-tertiary-container/20 transition-colors">
+<div>
+<div class="bg-tertiary text-on-tertiary w-fit p-3 rounded-xl mb-6">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-3">Banho e Tosa</h3>
+<p class="text-on-surface-variant text-body-md font-body-md">Transforme o visual do seu pet com nossos especialistas. Higiene e muito carinho em cada detalhe.</p>
+</div>
+<button class="mt-8 text-tertiary font-label-md text-label-md flex items-center gap-1 hover:gap-2 transition-all">
+                        Agendar <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- Consultas -->
+<div class="relative rounded-2xl overflow-hidden soft-shadow bg-secondary-container/10 group cursor-pointer p-8 flex flex-col justify-between hover:bg-secondary-container/20 transition-colors md:col-span-1">
+<div>
+<div class="bg-secondary text-on-secondary w-fit p-3 rounded-xl mb-6">
+<span class="material-symbols-outlined">stethoscope</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-3">Consultas Veterinárias</h3>
+<p class="text-on-surface-variant text-body-md font-body-md">Cuidando da saúde do seu pet com profissionais experientes e atendimento humanizado.</p>
+</div>
+<button class="mt-8 text-secondary font-label-md text-label-md flex items-center gap-1 hover:gap-2 transition-all">
+                        Marcar Consulta <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- App Promo -->
+<div class="md:col-span-2 relative rounded-2xl overflow-hidden soft-shadow bg-primary text-on-primary p-8 flex flex-col md:flex-row items-center gap-8 justify-between">
+<div class="z-10 max-w-md">
+<h3 class="text-headline-md font-headline-md mb-3">Baixe o App PetExpress</h3>
+<p class="text-primary-fixed mb-6">Acompanhe agendamentos, carteira de vacinação e receba ofertas exclusivas direto no seu celular.</p>
+<div class="flex gap-4">
+<button class="bg-surface text-primary py-2 px-6 rounded-full font-label-md flex items-center gap-2 hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined">smartphone</span> iOS
+                            </button>
+<button class="bg-surface text-primary py-2 px-6 rounded-full font-label-md flex items-center gap-2 hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined">android</span> Android
+                            </button>
+</div>
+</div>
+<div class="hidden md:block w-48 h-48 bg-white/10 rounded-full flex-shrink-0 flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined text-6xl opacity-50">qr_code_2</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-24 bg-surface-container-lowest px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-4">O que dizem sobre nós</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant">A satisfação dos nossos clientes é a nossa maior recompensa.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="glass-card rounded-2xl p-8 soft-shadow relative">
+<span class="material-symbols-outlined text-4xl text-primary/20 absolute top-6 right-6">format_quote</span>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg">M</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Mariana Silva</h4>
+<p class="text-sm text-on-surface-variant">Tutora da Luna (Golden)</p>
+</div>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"A equipe do PetExpress é maravilhosa! A Luna adora o dia de banho, volta sempre cheirosa e super feliz. O agendamento pelo site é muito prático."</p>
+<div class="flex text-secondary mt-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-card rounded-2xl p-8 soft-shadow relative">
+<span class="material-symbols-outlined text-4xl text-primary/20 absolute top-6 right-6">format_quote</span>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-lg">C</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Carlos Eduardo</h4>
+<p class="text-sm text-on-surface-variant">Tutor do Thor (Bulldog)</p>
+</div>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"A consulta veterinária foi excelente. O Dr. explicou tudo com muita calma. Além disso, sempre compro a ração do Thor por aqui, entrega rápida."</p>
+<div class="flex text-secondary mt-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-card rounded-2xl p-8 soft-shadow relative">
+<span class="material-symbols-outlined text-4xl text-primary/20 absolute top-6 right-6">format_quote</span>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-lg">A</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Ana Luiza</h4>
+<p class="text-sm text-on-surface-variant">Tutora da Mia (Gato)</p>
+</div>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"Achei o aplicativo incrível para organizar as vacinas da Mia. O ambiente da clínica é muito acolhedor, não parece hospital, a Mia ficou super calma."</p>
+<div class="flex text-secondary mt-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter max-w-container-max mx-auto bg-surface-container-highest mt-16">
+<div>
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 mb-4" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pets</span>
+                PetExpress
+            </a>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6 max-w-sm">
+                Cuidando do seu melhor amigo com dedicação, tecnologia e muito carinho.
+            </p>
+<p class="text-label-md font-label-md text-on-surface-variant">
+                © 2024 PetExpress - O melhor amigo do seu pet. Todos os direitos reservados.
+            </p>
+</div>
+<div class="flex flex-col md:items-end justify-center">
+<nav class="flex flex-wrap gap-4 md:gap-8 justify-start md:justify-end">
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Sobre Nós</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Política de Privacidade</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Termos de Uso</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Contato</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Trabalhe Conosco</a>
+</nav>
+<div class="flex gap-4 mt-8">
+<a class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">share</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">mail</span>
+</a>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PetExpress - Agendamento</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#24323f",
+                        "surface-bright": "#f7f9ff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#a4c9ff",
+                        "surface": "#f7f9ff",
+                        "primary-fixed-dim": "#a4c9ff",
+                        "on-tertiary-fixed-variant": "#00522b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#2e1500",
+                        "surface-container-high": "#dbeafc",
+                        "on-secondary-container": "#6b3900",
+                        "surface-container": "#e3efff",
+                        "on-primary-fixed-variant": "#004883",
+                        "on-primary-fixed": "#001c39",
+                        "primary-fixed": "#d4e3ff",
+                        "on-surface-variant": "#414751",
+                        "outline-variant": "#c1c7d3",
+                        "on-primary-container": "#fdfcff",
+                        "on-tertiary-fixed": "#00210e",
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "tertiary-container": "#00864a",
+                        "surface-container-low": "#edf4ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fc9d41",
+                        "on-background": "#0f1d29",
+                        "on-tertiary-container": "#f6fff4",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#d5e4f6",
+                        "outline": "#717783",
+                        "background": "#f7f9ff",
+                        "tertiary": "#006a39",
+                        "secondary": "#8f4e00",
+                        "surface-dim": "#cddbed",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#e8f2ff",
+                        "tertiary-fixed-dim": "#2ee285",
+                        "surface-variant": "#d5e4f6",
+                        "primary": "#005da7",
+                        "surface-tint": "#0060ac",
+                        "tertiary-fixed": "#5cff9f",
+                        "on-surface": "#0f1d29",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#ffb77a",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#2976c7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1200px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Montserrat"],
+                        "display-lg": ["Quicksand"],
+                        "headline-lg-mobile": ["Quicksand"],
+                        "label-md": ["Quicksand"],
+                        "headline-lg": ["Quicksand"],
+                        "body-lg": ["Montserrat"],
+                        "headline-md": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased pt-20">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 max-w-container-max mx-auto bg-surface dark:bg-inverse-surface shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[32px] fill">pets</span>
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">PetExpress</span>
+</div>
+<!-- Navigation Links (Hidden on mobile for now, assuming BottomNav might exist in full app, but rendering top nav as requested) -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-on-surface-variant dark:text-outline-variant font-medium text-label-md font-label-md hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200" href="#">Produtos</a>
+<a class="text-primary dark:text-inverse-primary font-bold border-b-2 border-primary pb-1 text-label-md font-label-md hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200" href="#">Serviços</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-medium text-label-md font-label-md hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200" href="#">Consultas</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-medium text-label-md font-label-md hover:text-primary dark:hover:text-inverse-primary transition-colors duration-200" href="#">Meus Pets</a>
+</nav>
+<div class="flex items-center gap-4 text-primary dark:text-inverse-primary">
+<button aria-label="shopping_cart" class="hover:bg-surface-container rounded-full p-2 transition-colors duration-200">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button aria-label="person" class="hover:bg-surface-container rounded-full p-2 transition-colors duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-16">
+<!-- Progress Indicator -->
+<div class="mb-12 flex justify-center w-full">
+<div class="flex items-center gap-2 md:gap-4 w-full max-w-2xl">
+<div class="flex flex-col items-center gap-2 text-primary">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary fill">pets</span>
+</div>
+<span class="text-label-md font-label-md hidden md:block">Pet</span>
+</div>
+<div class="h-1 flex-1 bg-primary-fixed rounded-full"></div>
+<div class="flex flex-col items-center gap-2 text-primary">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined fill">shower</span>
+</div>
+<span class="text-label-md font-label-md hidden md:block font-bold">Serviço</span>
+</div>
+<div class="h-1 flex-1 bg-surface-variant rounded-full"></div>
+<div class="flex flex-col items-center gap-2 text-outline-variant">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<span class="text-label-md font-label-md hidden md:block">Horário</span>
+</div>
+<div class="h-1 flex-1 bg-surface-variant rounded-full"></div>
+<div class="flex flex-col items-center gap-2 text-outline-variant">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined">payment</span>
+</div>
+<span class="text-label-md font-label-md hidden md:block">Pagamento</span>
+</div>
+</div>
+</div>
+<div class="mb-8">
+<button class="flex items-center gap-2 text-secondary-container hover:text-secondary transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined">arrow_back_ios</span>
+                Voltar
+            </button>
+</div>
+<!-- Scheduling Layout -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_rgba(0,93,167,0.05)] border border-outline-variant/30 overflow-hidden flex flex-col lg:flex-row">
+<!-- Left Panel: Service Info -->
+<div class="w-full lg:w-5/12 bg-surface-container-low p-6 md:p-10 flex flex-col">
+<div class="rounded-xl overflow-hidden mb-6 h-64 relative bg-surface-container-high">
+<img alt="Cachorro tomando banho" class="w-full h-full object-cover" data-alt="A cheerful golden retriever puppy is sitting happily in a galvanized steel tub filled with bubbly water, enjoying a bath. The setting is a brightly lit, modern pet grooming salon with clean white tile walls and soft natural light pouring in from a large window. The mood is joyful, fresh, and friendly, perfectly aligning with a soft-touch, premium light-mode aesthetic. The color palette emphasizes clean whites, warm golden fur tones, and soft primary blue accents in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwtlSdFkdcyCvhMr43wQlnaWxkjtsuGb2Zrn20ccVa3962WI6Hc48bjLzfVkCO26_Yq7olVjX7Zb4Tgbv3lWXbVvKqgB6j2dNL3V1xGqB_dso-rNAYPw6XAhu3jdxJ29A-SgJbwahRZCqWGlUCnrzlqAKu79X7adqovb0mq9CMFkyXDh94ltpsoHk4EFWRQYOo_VnBMb1DNoI5lBQeFTRIuxdyRBjVg6aXzaklkB1jlG7XwO-H77JiG_DYVQQTwxNmBYLYNVVcTt3H"/>
+</div>
+<div class="flex items-start justify-between mb-4">
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-primary font-bold">Banho e Tosa</h1>
+<div class="bg-tertiary-container text-on-tertiary px-3 py-1 rounded-full text-label-md font-label-md flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                        ~ 60 min
+                    </div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6">
+                    Mime o seu melhor amigo com um banho relaxante e uma tosa impecável. Utilizamos apenas produtos premium, adequados para o tipo de pelagem do seu pet, garantindo higiene, saúde e muito charme. Nossos profissionais são treinados para proporcionar uma experiência tranquila e segura.
+                </p>
+<div class="mt-auto">
+<div class="flex items-center gap-3 text-on-surface mb-2">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<span class="text-body-md font-body-md">Corte de unhas incluso</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<span class="text-body-md font-body-md">Limpeza de ouvidos</span>
+</div>
+</div>
+</div>
+<!-- Right Panel: Scheduling Form -->
+<div class="w-full lg:w-7/12 p-6 md:p-10 flex flex-col bg-surface-container-lowest">
+<h2 class="text-headline-md font-headline-md text-on-surface font-bold mb-6">Detalhes do Agendamento</h2>
+<form class="flex-1 flex flex-col space-y-8">
+<!-- Select Pet -->
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-2" for="pet-select">Para qual pet?</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface border border-outline text-on-surface text-body-md font-body-md rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow cursor-pointer" id="pet-select">
+<option disabled="" selected="" value="">Selecione um pet</option>
+<option value="thor">Thor (Golden Retriever)</option>
+<option value="luna">Luna (Gato Persa)</option>
+<option value="novo">+ Adicionar novo pet</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Date Selection (Calendar Mockup) -->
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-4">Escolha a data</label>
+<div class="bg-surface rounded-xl border border-outline-variant p-4">
+<div class="flex justify-between items-center mb-4">
+<button class="p-1 text-on-surface-variant hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+<span class="text-label-md font-label-md font-bold text-on-surface">Outubro 2023</span>
+<button class="p-1 text-on-surface-variant hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center mb-2">
+<span class="text-[12px] font-label-md text-outline">Dom</span>
+<span class="text-[12px] font-label-md text-outline">Seg</span>
+<span class="text-[12px] font-label-md text-outline">Ter</span>
+<span class="text-[12px] font-label-md text-outline">Qua</span>
+<span class="text-[12px] font-label-md text-outline">Qui</span>
+<span class="text-[12px] font-label-md text-outline">Sex</span>
+<span class="text-[12px] font-label-md text-outline">Sáb</span>
+</div>
+<div class="grid grid-cols-7 gap-1 md:gap-2 text-center text-body-md font-body-md">
+<!-- Disabled days -->
+<div class="py-2 text-outline-variant">1</div>
+<div class="py-2 text-outline-variant">2</div>
+<!-- Selectable days -->
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">3</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">4</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">5</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors relative" type="button">
+                                    6
+                                    <span class="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-secondary-container rounded-full"></span>
+</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">7</button>
+<!-- ... next week ... -->
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">8</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">9</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">10</button>
+<!-- Selected Day -->
+<button class="py-2 rounded-full bg-primary text-on-primary font-bold shadow-md transform scale-105 transition-transform" type="button">11</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">12</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">13</button>
+<button class="py-2 rounded-full hover:bg-surface-container-high transition-colors" type="button">14</button>
+</div>
+</div>
+</div>
+<!-- Time Slots -->
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-4">Horários disponíveis para 11/10</label>
+<div class="grid grid-cols-3 md:grid-cols-4 gap-3">
+<button class="py-2 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-body-md text-body-md hover:border-primary hover:text-primary transition-colors bg-surface text-center" type="button">09:00</button>
+<button class="py-2 px-3 rounded-lg border-2 border-primary bg-primary-fixed text-primary font-bold font-body-md text-body-md text-center shadow-sm" type="button">10:30</button>
+<button class="py-2 px-3 rounded-lg border border-outline-variant/30 text-outline-variant font-body-md text-body-md bg-surface-variant text-center opacity-50 cursor-not-allowed line-through" disabled="" type="button">14:00</button>
+<button class="py-2 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-body-md text-body-md hover:border-primary hover:text-primary transition-colors bg-surface text-center" type="button">15:30</button>
+<button class="py-2 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-body-md text-body-md hover:border-primary hover:text-primary transition-colors bg-surface text-center" type="button">16:00</button>
+<button class="py-2 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-body-md text-body-md hover:border-primary hover:text-primary transition-colors bg-surface text-center" type="button">17:30</button>
+</div>
+</div>
+<!-- Spacer -->
+<div class="flex-grow"></div>
+<!-- Summary & Submit -->
+<div class="bg-surface rounded-xl p-6 border border-outline-variant/30 mt-8">
+<div class="flex justify-between items-center mb-2">
+<span class="text-body-md font-body-md text-on-surface-variant">Serviço</span>
+<span class="text-label-md font-label-md font-bold text-on-surface">Banho e Tosa</span>
+</div>
+<div class="flex justify-between items-center mb-4">
+<span class="text-body-md font-body-md text-on-surface-variant">Data e Hora</span>
+<span class="text-label-md font-label-md text-on-surface">11 Out, 10:30</span>
+</div>
+<hr class="border-outline-variant/30 mb-4"/>
+<div class="flex justify-between items-end mb-6">
+<span class="text-headline-md font-headline-md font-bold text-on-surface">Total</span>
+<span class="text-headline-lg-mobile font-headline-lg-mobile font-bold text-secondary-container">R$ 120,00</span>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-full text-label-md font-label-md font-bold shadow-[0_4px_14px_rgba(0,93,167,0.3)] hover:bg-surface-tint hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all duration-200 flex justify-center items-center gap-2" type="button">
+                            Avançar para Pagamento
+                            <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter max-w-container-max mx-auto bg-surface-container-highest dark:bg-inverse-surface mt-16 flat no shadows">
+<div class="flex flex-col gap-4">
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary flex items-center gap-2">
+<span class="material-symbols-outlined fill">pets</span>
+                PetExpress
+            </span>
+<p class="text-body-md font-body-md text-on-surface-variant dark:text-outline-variant">© 2024 PetExpress - O melhor amigo do seu pet. Todos os direitos reservados.</p>
+</div>
+<div class="flex flex-col md:items-end justify-center gap-3">
+<div class="flex flex-wrap gap-4 md:justify-end">
+<a class="text-on-surface-variant dark:text-outline-variant text-label-md font-label-md hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Sobre Nós</a>
+<a class="text-on-surface-variant dark:text-outline-variant text-label-md font-label-md hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Política de Privacidade</a>
+<a class="text-on-surface-variant dark:text-outline-variant text-label-md font-label-md hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Termos de Uso</a>
+<a class="text-on-surface-variant dark:text-outline-variant text-label-md font-label-md hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contato</a>
+<a class="text-on-surface-variant dark:text-outline-variant text-label-md font-label-md hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Trabalhe Conosco</a>
+</div>
+</div>
+</footer>
+</body></html>
