@@ -1,5 +1,6 @@
+import "./config/env";
 import express from "express";
-import dotenv from "dotenv";
+import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import { errorMiddleware } from "./lib/errors";
@@ -12,16 +13,18 @@ import funcionarioRoutes from "./routes/funcionarioRoutes";
 import planoRoutes from "./routes/planoRoutes";
 import servicoRoutes from "./routes/servicoRoutes";
 import usuarioRoutes from "./routes/usuarioRoutes";
-
-dotenv.config();
+import authRoutes from "./routes/authRoutes";
+import { conectarRedis } from "./lib/redis";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173", credentials: true }));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/usuarios", usuarioRoutes);
+app.use("/auth", authRoutes);
 app.use("/enderecos", enderecoRoutes);
 app.use("/fidelidades", fidelidadeRoutes);
 app.use("/animais", animalRoutes);
@@ -44,7 +47,10 @@ app.use((_req, res) => {
 
 app.use(errorMiddleware);
 
-app.listen(port, () => {
+conectarRedis().then(() => app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
   console.log(`Swagger em http://localhost:${port}/api-docs`);
+})).catch((error: unknown) => {
+  console.error("Não foi possível conectar ao Redis:", error);
+  process.exit(1);
 });
