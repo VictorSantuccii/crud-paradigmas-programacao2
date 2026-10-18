@@ -16,9 +16,9 @@ export const mainNavItems: NavItem[] = [
     match: (pathname) => pathname.startsWith("/consultas"),
   },
   {
-    label: "Meus Pets",
-    to: "/meus-pets",
-    match: (pathname) => pathname.startsWith("/meus-pets"),
+    label: "Meu Perfil",
+    to: "/meu-perfil",
+    match: (pathname) => pathname.startsWith("/meu-perfil") || pathname.startsWith("/meus-pets"),
   },
 ];
 

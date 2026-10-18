@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PetExpress - O melhor amigo do seu pet</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Quicksand:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-secondary-fixed-variant": "#6d3a00",
+          "tertiary-fixed": "#5cff9f",
+          "on-surface-variant": "#414751",
+          "inverse-on-surface": "#e8f2ff",
+          "primary": "#005da7",
+          "on-error-container": "#93000a",
+          "tertiary-container": "#00864a",
+          "primary-container": "#2976c7",
+          "secondary-container": "#fc9d41",
+          "primary-fixed": "#d4e3ff",
+          "tertiary": "#006a39",
+          "error": "#ba1a1a",
+          "on-surface": "#0f1d29",
+          "on-tertiary-fixed-variant": "#00522b",
+          "error-container": "#ffdad6",
+          "surface-tint": "#0060ac",
+          "surface-container-highest": "#d5e4f6",
+          "outline-variant": "#c1c7d3",
+          "on-primary-container": "#fdfcff",
+          "surface": "#f7f9ff",
+          "on-tertiary-fixed": "#00210e",
+          "on-secondary-container": "#6b3900",
+          "primary-fixed-dim": "#a4c9ff",
+          "outline": "#717783",
+          "secondary-fixed": "#ffdcc2",
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#d5e4f6",
+          "on-primary-fixed-variant": "#004883",
+          "on-primary": "#ffffff",
+          "surface-dim": "#cddbed",
+          "inverse-surface": "#24323f",
+          "on-secondary": "#ffffff",
+          "surface-container-high": "#dbeafc",
+          "on-secondary-fixed": "#2e1500",
+          "on-background": "#0f1d29",
+          "surface-container-lowest": "#ffffff",
+          "surface-bright": "#f7f9ff",
+          "on-tertiary-container": "#f6fff4",
+          "surface-container-low": "#edf4ff",
+          "surface-container": "#e3efff",
+          "on-primary-fixed": "#001c39",
+          "secondary": "#8f4e00",
+          "background": "#f7f9ff",
+          "on-error": "#ffffff",
+          "secondary-fixed-dim": "#ffb77a",
+          "tertiary-fixed-dim": "#2ee285",
+          "inverse-primary": "#a4c9ff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "base": "8px",
+          "gutter": "24px",
+          "margin-desktop": "48px",
+          "margin-mobile": "16px",
+          "container-max": "1200px"
+        },
+        "fontFamily": {
+          "body-md": [
+            "Montserrat"
+          ],
+          "headline-md": [
+            "Quicksand"
+          ],
+          "headline-lg": [
+            "Quicksand"
+          ],
+          "label-md": [
+            "Quicksand"
+          ],
+          "headline-lg-mobile": [
+            "Quicksand"
+          ],
+          "display-lg": [
+            "Quicksand"
+          ],
+          "body-lg": [
+            "Montserrat"
+          ]
+        },
+        "fontSize": {
+          "body-md": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-md": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg": [
+            "32px",
+            {
+              "lineHeight": "40px",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg-mobile": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "48px",
+            {
+              "lineHeight": "56px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "18px",
+            {
+              "lineHeight": "28px",
+              "fontWeight": "400"
+            }
+          ]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @layer base {
+    html {
+      color: #0f1d29;
+      background-color: #f7f9ff;
+    }
+  }
+  .soft-shadow {
+    box-shadow: 0 10px 25px rgba(0, 93, 167, 0.08);
+  }
+</style>
+<meta content="web_standard" name="shell-type"/>
+</head>
+<body class="font-body-md text-body-md antialiased text-on-surface bg-background">
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md shadow-sm">
+<div class="h-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center gap-gutter">
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 shrink-0" data-path="petexpress-landing-page" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span>PetExpress</span>
+</a>
+<nav class="hidden md:flex items-center gap-8" data-active-classes="text-primary font-bold">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-servicos" href="#">Serviços</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-consultas" href="#">Consultas</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-meus-pets" href="#">Meus Pets</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-meu-perfil" href="#">Meu Perfil</a>
+</nav>
+<div class="flex items-center gap-3 shrink-0">
+<a class="hidden lg:inline-flex items-center justify-center px-4 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md shadow hover:bg-primary-container transition-colors" data-path="petexpress-agendar-consulta" href="#">
+        Agendar Consulta
+      </a>
+<button aria-label="Notificações" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<a aria-label="Perfil do usuário" class="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-container transition-colors" data-path="petexpress-meu-perfil" href="#">
+<div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-headline-md font-bold text-sm overflow-hidden">
+<span class="material-symbols-outlined text-lg">person</span>
+</div>
+</a>
+<button aria-label="Menu de navegação" class="md:hidden p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<div class="flex flex-col w-full">
+<div class="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12">
+<!-- Ambient subtle background blur circles -->
+<div class="relative w-full">
+<div class="absolute -top-10 -left-12 w-72 h-72 rounded-full bg-primary-fixed/40 blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-secondary-fixed/50 blur-3xl pointer-events-none"></div>
+<!-- Main Split Card Layout -->
+<div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden">
+<!-- Left Side: Editorial Banner & Visual Welcome -->
+<div class="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-primary text-on-primary p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
+<!-- Background decorative art pattern -->
+<div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-on-primary/10 pointer-events-none"></div>
+<div class="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-tertiary-fixed/10 pointer-events-none"></div>
+<!-- Top Brand Tag & Welcome -->
+<div class="relative z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-on-primary/15 text-primary-fixed backdrop-blur-sm mb-6">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-md text-label-md">Comunidade PetExpress</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-primary mb-4 leading-tight">
+              O bem-estar do seu amigo em boas mãos.
+            </h1>
+<p class="font-body-md text-body-md text-primary-fixed leading-relaxed mb-8">
+              Acesse o histórico clínico completo, acompanhe a caderneta de vacinas e reserve horários em instantes para banho, tosa e especialistas.
+            </p>
+<!-- Benefit Chips -->
+<div class="space-y-4">
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-on-primary/10 backdrop-blur-xs">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">vaccines</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md text-on-primary font-bold">Alertas de Vacinação e Remédios</h2>
+<p class="font-body-md text-label-md text-primary-fixed opacity-90">Receba notificações personalizadas no WhatsApp.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-on-primary/10 backdrop-blur-xs">
+<div class="w-10 h-10 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">event_available</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md text-on-primary font-bold">Agendamentos Express</h2>
+<p class="font-body-md text-label-md text-primary-fixed opacity-90">Reserve consultas, tosa e hotelzinho com 1 toque.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-on-primary/10 backdrop-blur-xs">
+<div class="w-10 h-10 rounded-full bg-surface text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md text-on-primary font-bold">Histórico Unificado &amp; Seguro</h2>
+<p class="font-body-md text-label-md text-primary-fixed opacity-90">Exames, receitas e diagnósticos sempre protegidos.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Customer Love Badge & Hero Pet Photo -->
+<div class="relative z-10 pt-8 mt-6">
+<div class="bg-surface-container-lowest/15 backdrop-blur-md rounded-xl p-4 flex items-center gap-4">
+<img class="w-14 h-14 rounded-full object-cover shrink-0 ring-2 ring-primary-fixed" data-alt="A portrait of a cheerful golden retriever puppy sitting gracefully beside a caring veterinarian smiling in a bright modern clinic with warm natural sunlight, high-end photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9uyc5qEY291tD1e2T5EXXuerGHWgI29E8HfbzeZaQmaPkyOvwLc5ksS7oFCkn1BEGdSMF4RVBPP7MqzeAxFl_AhniFh5CHdoIl4-MLOeIX9ZNwXDmM5vZDxUoit86CRAnTfqd4z4-EpvrqWN6GJ_pDm3E1cv_7Tj4zqMelPy1B640XwPJGH9Ra4LT-8FsBtpVhKni6wt5P4UR7k399RWwVJvm6d6Fgxg32xuvnRAeMkZuKRbKLi7_7g"/>
+<div class="min-w-0">
+<div class="flex items-center gap-1 text-secondary-fixed mb-0.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-label-md text-on-primary font-medium truncate">
+                  "O PetExpress salvou a rotina com o Pipoca!"
+                </p>
+<span class="font-label-md text-xs text-primary-fixed">Mariana S. • Tutora há 2 anos</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Authentication Forms -->
+<div class="lg:col-span-7 p-6 sm:p-10 md:p-12 flex flex-col justify-center bg-surface-container-lowest">
+<!-- Tab Navigation Switcher -->
+<div class="flex items-center bg-surface-container-low p-1.5 rounded-full mb-8 max-w-md mx-auto w-full">
+<button class="flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 bg-primary text-on-primary shadow-sm" id="tab-btn-login" onclick="switchAuthTab('login')" type="button">
+<span class="material-symbols-outlined text-base">login</span>
+              Entrar na Conta
+            </button>
+<button class="flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary" id="tab-btn-register" onclick="switchAuthTab('register')" type="button">
+<span class="material-symbols-outlined text-base">person_add</span>
+              Criar Nova Conta
+            </button>
+</div>
+<!-- LOGIN TAB PANE -->
+<div class="block w-full max-w-md mx-auto" id="pane-login">
+<div class="mb-6">
+<h2 class="font-headline-lg text-headline-md text-on-surface font-bold">
+                Acesse sua área de tutor
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+                Insira suas credenciais para gerenciar seus companheiros.
+              </p>
+</div>
+<form class="space-y-4" onsubmit="event.preventDefault();">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1.5" for="login-identifier">
+                  E-mail ou Telefone
+                </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">alternate_email</span>
+</div>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="login-identifier" placeholder="exemplo@petexpress.com.br" required="" type="text"/>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="login-password">
+                    Senha
+                  </label>
+<a class="font-label-md text-label-md text-secondary hover:text-on-secondary-fixed-variant transition-colors" href="#">
+                    Esqueceu a senha?
+                  </a>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">lock</span>
+</div>
+<input class="w-full pl-10 pr-11 py-3 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="login-password" placeholder="••••••••" required="" type="password"/>
+<button aria-label="Alternar visibilidade de senha" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-outline hover:text-primary transition-colors focus:outline-none" onclick="togglePasswordVisibility('login-password', this)" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between py-1">
+<label class="inline-flex items-center gap-2.5 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-primary bg-surface-container-low ring-1 ring-outline-variant border-0" type="checkbox"/>
+<span class="font-body-md text-label-md text-on-surface-variant">Lembrar de mim por 30 dias</span>
+</label>
+</div>
+<button class="w-full py-3.5 px-6 rounded-full bg-primary text-on-primary font-headline-md text-body-md font-bold shadow-md hover:bg-primary-container active:scale-[0.99] transition-all flex items-center justify-center gap-2" type="submit">
+<span>Entrar no PetExpress</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</form>
+<!-- Social Logins Section -->
+<div class="mt-8">
+<div class="relative flex items-center justify-center mb-6">
+<div class="w-full h-px bg-surface-container-highest"></div>
+<span class="absolute px-4 bg-surface-container-lowest text-outline font-label-md text-label-md uppercase tracking-wider">
+                  ou acesse com
+                </span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md shadow-sm transition-all" type="button">
+<svg class="w-5 h-5 shrink-0" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+<span>Google</span>
+</button>
+<button class="flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md shadow-sm transition-all" type="button">
+<svg class="w-5 h-5 shrink-0 fill-current" viewbox="0 0 24 24">
+<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 1.01-2.87-.96.04-2.06.65-2.73 1.43-.56.65-1.07 1.71-.97 2.76 1.08.08 2.08-.57 2.69-1.32z"></path>
+</svg>
+<span>Apple ID</span>
+</button>
+</div>
+</div>
+<!-- Switch Footnote -->
+<p class="text-center font-body-md text-label-md text-on-surface-variant mt-8">
+              Ainda não tem conta?
+              <button class="text-primary font-bold hover:underline" onclick="switchAuthTab('register')" type="button">
+                Cadastre-se gratuitamente
+              </button>
+</p>
+</div>
+<!-- REGISTER TAB PANE -->
+<div class="hidden w-full max-w-md mx-auto" id="pane-register">
+<div class="mb-6">
+<h2 class="font-headline-lg text-headline-md text-on-surface font-bold">
+                Crie seu perfil de tutor
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+                Leva menos de 1 minuto para cadastrar você e seu melhor amigo.
+              </p>
+</div>
+<form class="space-y-3.5" onsubmit="event.preventDefault();">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="reg-name">
+                  Nome Completo
+                </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">person</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="reg-name" placeholder="Ex: Carlos Eduardo de Oliveira" required="" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="reg-email">
+                  E-mail
+                </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">mail</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="reg-email" placeholder="carlos@exemplo.com" required="" type="email"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="reg-phone">
+                  WhatsApp / Celular
+                  <span class="text-tertiary font-bold text-xs ml-1">(Lembretes de vacina)</span>
+</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">phone_iphone</span>
+</div>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="reg-phone" placeholder="(11) 98765-4321" required="" type="tel"/>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="reg-password">
+                    Criar Senha
+                  </label>
+<div class="relative">
+<input class="w-full px-3.5 py-2.5 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="reg-password" placeholder="Mín. 8 dígitos" required="" type="password"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="reg-password-confirm">
+                    Confirmar Senha
+                  </label>
+<div class="relative">
+<input class="w-full px-3.5 py-2.5 bg-surface-container-lowest rounded-lg border-0 shadow-sm ring-1 ring-outline-variant focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline font-body-md text-body-md outline-none transition-shadow" id="reg-password-confirm" placeholder="Repita a senha" required="" type="password"/>
+</div>
+</div>
+</div>
+<!-- Checkboxes with friendly styling -->
+<div class="pt-2 space-y-2.5">
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input class="mt-1 w-4 h-4 rounded text-primary focus:ring-primary bg-surface-container-low ring-1 ring-outline-variant border-0" required="" type="checkbox"/>
+<span class="font-body-md text-label-md text-on-surface-variant leading-tight">
+                    Concordo com os <a class="text-primary underline" href="#">Termos de Serviço</a> e a <a class="text-primary underline" href="#">Política de Privacidade</a> do PetExpress.
+                  </span>
+</label>
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input checked="" class="mt-1 w-4 h-4 rounded text-tertiary focus:ring-tertiary bg-surface-container-low ring-1 ring-outline-variant border-0" type="checkbox"/>
+<span class="font-body-md text-label-md text-on-surface-variant leading-tight">
+                    Desejo receber lembretes de consultas, campanhas de vacinação e ofertas especiais via WhatsApp.
+                  </span>
+</label>
+</div>
+<button class="w-full mt-4 py-3.5 px-6 rounded-full bg-primary text-on-primary font-headline-md text-body-md font-bold shadow-md hover:bg-primary-container active:scale-[0.99] transition-all flex items-center justify-center gap-2" type="submit">
+<span>Criar Minha Conta Gratuita</span>
+<span class="material-symbols-outlined text-lg">pets</span>
+</button>
+</form>
+<p class="text-center font-body-md text-label-md text-on-surface-variant mt-6">
+              Já possui uma conta?
+              <button class="text-primary font-bold hover:underline" onclick="switchAuthTab('login')" type="button">
+                Faça login aqui
+              </button>
+</p>
+</div>
+</div>
+</div>
+<!-- Quick Trust Indicators Below Box -->
+<div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+<div class="p-3 bg-surface-container rounded-xl flex items-center justify-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">security</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Dados 100% Criptografados</span>
+</div>
+<div class="p-3 bg-surface-container rounded-xl flex items-center justify-center gap-2.5">
+<span class="material-symbols-outlined text-tertiary text-xl" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Veterinários Verificados</span>
+</div>
+<div class="p-3 bg-surface-container rounded-xl flex items-center justify-center gap-2.5">
+<span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Suporte e Emergência 24h</span>
+</div>
+<div class="p-3 bg-surface-container rounded-xl flex items-center justify-center gap-2.5">
+<span class="material-symbols-outlined text-primary-container text-xl" style="font-variation-settings: 'FILL' 1;">thumb_up</span>
+<span class="font-label-md text-label-md text-on-surface-variant">+45.000 Pets Atendidos</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+    function switchAuthTab(tab) {
+      const loginPane = document.getElementById('pane-login');
+      const registerPane = document.getElementById('pane-register');
+      const loginBtn = document.getElementById('tab-btn-login');
+      const regBtn = document.getElementById('tab-btn-register');
+
+      if (tab === 'login') {
+        loginPane.classList.remove('hidden');
+        loginPane.classList.add('block');
+        registerPane.classList.remove('block');
+        registerPane.classList.add('hidden');
+
+        loginBtn.className = 'flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 bg-primary text-on-primary shadow-sm';
+        regBtn.className = 'flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary';
+      } else {
+        registerPane.classList.remove('hidden');
+        registerPane.classList.add('block');
+        loginPane.classList.remove('block');
+        loginPane.classList.add('hidden');
+
+        regBtn.className = 'flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 bg-primary text-on-primary shadow-sm';
+        loginBtn.className = 'flex-1 py-2.5 px-4 rounded-full font-headline-md text-label-md font-bold transition-all text-center flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary';
+      }
+    }
+
+    function togglePasswordVisibility(inputId, toggleBtn) {
+      const input = document.getElementById(inputId);
+      const icon = toggleBtn.querySelector('.material-symbols-outlined');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
+  </script>
+</div>
+</main>
+<footer class="w-full py-12 px-margin-mobile md:px-margin-desktop bg-surface-container-highest mt-16">
+<div class="max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 mb-4" data-path="petexpress-landing-page" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span>PetExpress</span>
+</a>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6 max-w-sm">
+        Cuidando do seu melhor amigo com dedicação, tecnologia e muito carinho.
+      </p>
+<p class="text-label-md font-label-md text-on-surface-variant">
+        © 2024 PetExpress - O melhor amigo do seu pet. Todos os direitos reservados.
+      </p>
+</div>
+<div class="flex flex-col md:items-end justify-center">
+<nav class="flex flex-wrap gap-4 md:gap-8 justify-start md:justify-end">
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Sobre Nós</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Política de Privacidade</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Termos de Uso</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Contato</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Trabalhe Conosco</a>
+</nav>
+<div class="flex gap-4 mt-8">
+<a aria-label="Compartilhar" class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">share</span>
+</a>
+<a aria-label="E-mail de suporte" class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">mail</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
