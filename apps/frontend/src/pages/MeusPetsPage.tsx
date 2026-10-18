@@ -1,63 +1,57 @@
 import { PageShell } from "@/components/layout/PageShell";
-import { AddPetCard } from "@/components/meus-pets/AddPetCard";
-import { AppointmentCard } from "@/components/meus-pets/AppointmentCard";
-import { HistoryList } from "@/components/meus-pets/HistoryList";
-import { PetCard } from "@/components/meus-pets/PetCard";
-import { PetsHeader } from "@/components/meus-pets/PetsHeader";
-import { ProfileCard } from "@/components/meus-pets/ProfileCard";
 import { Icon } from "@/components/ui/Icon";
 import { pets } from "@/content/meus-pets";
+import { useState } from "react";
+import type { ReactNode } from "react";
+
+const tabs = [
+  { id: "geral", label: "Visão Geral & Dados", icon: "dashboard", target: "resumo" },
+  { id: "pets", label: "Meus Pets & Carteirinhas", icon: "pets", target: "pets" },
+  { id: "consultas", label: "Histórico de Consultas & Vacinas", icon: "medical_services", target: "historico" },
+  { id: "enderecos", label: "Endereços & Preferências", icon: "home_pin", target: "enderecos" },
+];
+
+function Panel({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
+  return <section id={id} className={`rounded-xl bg-surface-container-lowest p-6 shadow-sm ${className}`}>{children}</section>;
+}
 
 export function MeusPetsPage() {
-  return (
-    <PageShell className="pb-20">
-      <main className="mx-auto mt-8 max-w-container-max space-y-12 px-margin-mobile md:mt-16 md:px-margin-desktop">
-        <PetsHeader />
+  const [activeTab, setActiveTab] = useState("geral");
+  const [saved, setSaved] = useState(false);
+  const [preferences, setPreferences] = useState([true, true, false]);
 
-        <section>
-          <div className="mb-6 flex items-center justify-between border-b border-surface-variant pb-2">
-            <h2 className="flex items-center gap-2 font-headline-md text-on-surface">
-              <Icon name="pets" className="text-secondary" />
-              Meus Pets
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {pets.map((pet) => (
-              <PetCard key={pet.id} pet={pet} />
-            ))}
-            <AddPetCard />
+  function goToTab(id: string, target: string) {
+    setActiveTab(id);
+    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  return (
+    <PageShell>
+      <main>
+        <section className="relative overflow-hidden bg-gradient-to-r from-primary-fixed via-surface-container to-surface-container-high px-margin-mobile py-10 md:px-margin-desktop">
+          <div className="mx-auto flex max-w-container-max flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center"><div className="relative"><div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface-container-lowest text-primary shadow-md"><Icon name="person" className="text-5xl" /></div><span className="absolute right-1 bottom-1 flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-on-tertiary"><Icon name="verified" className="text-sm" /></span></div><div><div className="flex flex-wrap items-center gap-3"><h1 className="font-headline-lg text-3xl font-bold tracking-tight text-on-surface">João da Silva</h1><span className="inline-flex items-center gap-1.5 rounded-full bg-primary-fixed-dim px-3 py-1 text-sm font-semibold text-on-primary-fixed-variant"><Icon name="stars" filled />Tutor Ativo desde 2023</span></div><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-on-surface-variant"><span className="flex items-center gap-1"><Icon name="mail" className="text-primary" />joao.silva@email.com</span><span className="flex items-center gap-1"><Icon name="phone_iphone" className="text-primary" />(11) 98765-4321</span><span className="flex items-center gap-1"><Icon name="location_on" className="text-primary" />São Paulo, Pinheiros</span></div></div></div>
+            <div className="flex w-full justify-end gap-3 sm:w-auto"><button type="button" onClick={() => goToTab("geral", "dados-pessoais")} className="flex items-center gap-2 rounded-full bg-surface-container-lowest px-5 py-2.5 font-label-md font-bold text-primary shadow-sm transition hover:bg-surface-container-low"><Icon name="edit" />Editar Perfil</button><button type="button" aria-label="Configurações da conta" onClick={() => goToTab("enderecos", "preferencias")} className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant shadow-sm hover:text-primary"><Icon name="settings" /></button></div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="space-y-8 lg:col-span-2">
-            <section>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-headline-md text-on-surface">
-                  <Icon name="calendar_month" className="text-tertiary" />
-                  Próximos Agendamentos
-                </h2>
-                <a
-                  href="#"
-                  className="font-label-md text-primary hover:underline"
-                >
-                  Ver todos
-                </a>
-              </div>
-              <AppointmentCard />
-            </section>
+        <div className="mx-auto flex w-full max-w-container-max flex-col gap-8 px-margin-mobile py-8 md:px-margin-desktop">
+          <nav aria-label="Seções do perfil" className="flex gap-2 overflow-x-auto pb-2">{tabs.map((tab) => <button key={tab.id} type="button" onClick={() => goToTab(tab.id, tab.target)} aria-current={activeTab === tab.id ? "page" : undefined} className={`inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-3 font-label-md transition-colors ${activeTab === tab.id ? "bg-primary text-on-primary shadow-sm" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}><Icon name={tab.icon} />{tab.label}</button>)}</nav>
 
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 font-headline-md text-on-surface">
-                <Icon name="history" className="text-primary" />
-                Histórico Recente
-              </h2>
-              <HistoryList />
-            </section>
-          </div>
+          <section id="resumo" aria-label="Resumo rápido" className="grid scroll-mt-28 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"><Panel className="flex flex-col justify-between"><div className="flex items-center justify-between text-sm font-semibold text-on-surface-variant">Pets Cadastrados<span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-fixed text-primary"><Icon name="pets" filled /></span></div><div className="mt-4 flex items-baseline gap-2"><strong className="font-display-lg leading-none text-on-surface">{pets.length}</strong><span className="text-sm text-on-surface-variant">pets (Thor e Miau)</span></div><div className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-tertiary"><Icon name="check_circle" />Todos os perfis completos</div></Panel><Panel className="flex flex-col justify-between"><div className="flex items-center justify-between text-sm font-semibold text-on-surface-variant">Próxima Consulta<span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-fixed text-secondary"><Icon name="calendar_clock" filled /></span></div><div className="mt-4"><strong className="block font-headline-md text-on-surface">18 Out às 14:00</strong><span className="text-sm text-on-surface-variant">Dr. Carlos Mendes</span></div><div className="mt-3 text-sm font-bold text-primary">Thor • Check-up Periódico</div></Panel><Panel className="flex flex-col justify-between"><div className="flex items-center justify-between text-sm font-semibold text-on-surface-variant">Vacinas em Dia<span className="flex h-10 w-10 items-center justify-center rounded-full bg-tertiary-fixed text-tertiary"><Icon name="shield" filled /></span></div><div className="mt-4 flex items-baseline gap-2"><strong className="font-display-lg leading-none text-tertiary">100%</strong><span className="text-sm text-on-surface-variant">imunizados</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-container"><div className="h-full w-full rounded-full bg-tertiary" /></div></Panel><Panel className="flex flex-col justify-between"><div className="flex items-center justify-between text-sm font-semibold text-on-surface-variant">Clube PetExpress<span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-fixed text-secondary"><Icon name="loyalty" filled /></span></div><div className="mt-4"><strong className="block font-headline-md text-on-surface">Tutor Ouro</strong><span className="text-sm text-on-surface-variant">Benefícios ativos</span></div><div className="mt-3 text-sm font-bold text-secondary">Ver vantagens <Icon name="arrow_forward" className="align-middle" /></div></Panel></section>
 
-          <div>
-            <ProfileCard />
+          <div className="grid items-start gap-8 lg:grid-cols-12">
+            <div className="flex flex-col gap-8 lg:col-span-8">
+              <Panel id="pets" className="scroll-mt-28"><div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-center"><div><h2 className="flex items-center gap-2 font-headline-md font-bold text-on-surface"><Icon name="pets" filled className="text-primary" />Meus Pets & Carteirinhas</h2><p className="mt-1 text-sm text-on-surface-variant">Perfis completos e informações de saúde</p></div><button type="button" className="flex items-center gap-1 self-start font-label-md text-primary hover:underline"><Icon name="add" />Adicionar Pet</button></div><div className="grid gap-4 md:grid-cols-2">{pets.map((pet, index) => <article key={pet.id} className="group flex flex-col justify-between gap-4 rounded-xl bg-surface-container-low p-5 transition hover:shadow-md"><div className="flex items-start gap-4"><img className="h-20 w-20 shrink-0 rounded-xl object-cover shadow-sm transition group-hover:scale-105" src={pet.image} alt={pet.imageAlt} /><div className="min-w-0"><div className="flex items-center gap-2"><h3 className="truncate font-headline-md font-bold text-on-surface">{pet.name}</h3><span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${index === 0 ? "bg-primary-fixed text-primary" : "bg-secondary-fixed text-secondary"}`}>{index === 0 ? "Cão" : "Gato"}</span></div><p className="text-sm text-on-surface-variant">{index === 0 ? "Golden Retriever" : "Siamês Mestiço"}</p><p className="mt-1 text-sm text-on-surface-variant">{index === 0 ? "3 anos • 28.4 kg" : "2 anos • 4.2 kg"}</p></div></div><div className="flex flex-col gap-1.5 rounded-lg bg-surface-container-lowest p-3 text-xs text-on-surface-variant"><p className="flex justify-between gap-2"><b>Microchip:</b><span className="font-mono text-on-surface">{index === 0 ? "981098124792102" : "981098124995341"}</span></p><p className="flex justify-between gap-2"><b>Plano de Saúde:</b><span className="font-bold text-tertiary">PetCare {index === 0 ? "Plus" : "Básico"} Ativo</span></p><p className="flex justify-between gap-2"><b>Última Vacina:</b><span className="text-right text-on-surface">{index === 0 ? "V10 (Julho 2024)" : "Tríplice Felina (Ago 2024)"}</span></p></div><button type="button" onClick={() => goToTab("consultas", "historico")} className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2.5 font-label-md text-on-primary transition hover:bg-primary-container"><Icon name="clinical_notes" />Histórico Clínico e Vacinas</button></article>)}<button type="button" className="flex min-h-56 flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest p-5 text-center text-primary transition hover:border-primary hover:bg-surface-container-low"><span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-fixed"><Icon name="add" className="text-2xl" /></span><b className="font-headline-md">Cadastrar novo pet</b><span className="mt-1 text-sm text-on-surface-variant">Mantenha a carteirinha em dia</span></button></div></Panel>
+
+              <Panel id="historico" className="scroll-mt-28"><div className="mb-5"><h2 className="flex items-center gap-2 font-headline-md font-bold text-on-surface"><Icon name="history_edu" className="text-primary" />Histórico Clínico & Consultas</h2><p className="text-sm text-on-surface-variant">Registro cronológico de diagnósticos, receitas emitidas e retornos</p></div><div className="space-y-4">{[{ title: "Check-up Semestral e Vacina Antirrábica", pet: "Thor", date: "14 de Agosto de 2024", vet: "Dr. Carlos Mendes (CRMV-SP 24.512)", note: "Evolução física excelente. Peso controlado e dentes sem tártaro.", medication: "Apoquel 16mg e Vermífugo NexGard Spectra" }, { title: "Avaliação Dermatológica & Limpeza Auricular", pet: "Miau", date: "22 de Julho de 2024", vet: "Dra. Amanda Nogueira (CRMV-SP 31.884)", note: "Leve hipersensibilidade alérgica no pavilhão auditivo direito.", medication: "Otite Solution 15ml + Pomada calmante" }].map((item) => <article key={item.title} className="flex flex-col gap-4 rounded-xl bg-surface-container-low p-5"><div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-fixed text-primary"><Icon name="stethoscope" /></span><div><h3 className="font-headline-md font-bold text-on-surface">{item.title}</h3><p className="text-sm text-on-surface-variant">Pet: <b className="text-on-surface">{item.pet}</b> • Realizado em {item.date}</p></div></div><span className="self-start rounded-full bg-tertiary-fixed px-3 py-1 text-xs font-bold text-on-tertiary-fixed-variant">✓ Concluído</span></div><div className="grid gap-4 rounded-lg bg-surface-container-lowest p-4 md:grid-cols-2"><div><span className="mb-1 block text-xs font-semibold text-on-surface-variant">Médico Veterinário</span><p className="flex items-center gap-2 text-sm font-medium text-on-surface"><Icon name="person" className="text-primary" />{item.vet}</p></div><div><span className="mb-1 block text-xs font-semibold text-on-surface-variant">Diagnóstico & Observações</span><p className="text-sm text-on-surface">{item.note}</p></div></div><div className="flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-sm text-on-surface-variant"><Icon name="medication" className="text-secondary" />Prescrição: {item.medication}</p><button type="button" className="flex items-center gap-1.5 rounded-full bg-surface-container-highest px-4 py-2 font-label-md text-primary hover:bg-primary-fixed"><Icon name="download" />Baixar Receita PDF</button></div></article>)}</div></Panel>
+            </div>
+
+            <aside className="flex flex-col gap-8 lg:col-span-4">
+              <Panel id="dados-pessoais" className="scroll-mt-28"><div className="mb-5 flex items-center justify-between"><h2 className="flex items-center gap-2 font-headline-md font-bold text-on-surface"><Icon name="person_pin" className="text-primary" />Dados Pessoais</h2><button type="button" aria-label="Editar dados" className="text-primary hover:text-primary-container"><Icon name="edit_square" /></button></div><dl className="space-y-4 text-sm"><div><dt className="font-label-md text-on-surface-variant">Nome Completo</dt><dd className="mt-0.5 font-medium">João Batista da Silva</dd></div><div><dt className="font-label-md text-on-surface-variant">CPF</dt><dd className="mt-0.5 font-mono font-medium">123.456.789-00</dd></div><div><dt className="font-label-md text-on-surface-variant">E-mail Principal</dt><dd className="mt-0.5 font-medium">joao.silva@email.com</dd></div><div><dt className="font-label-md text-on-surface-variant">Telefone / WhatsApp</dt><dd className="mt-0.5 font-medium">+55 (11) 98765-4321</dd></div></dl></Panel>
+              <Panel id="enderecos" className="scroll-mt-28"><div className="mb-5 flex items-center justify-between"><h2 className="flex items-center gap-2 font-headline-md font-bold text-on-surface"><Icon name="location_city" className="text-primary" />Endereço Residencial</h2><span className="rounded-full bg-primary-fixed px-2.5 py-0.5 text-xs font-bold text-on-primary-fixed-variant">Principal</span></div><div className="rounded-xl bg-surface-container-low p-4"><p className="flex items-start gap-2 font-bold text-on-surface"><Icon name="home" className="text-primary" />Rua das Flores, 123 - Apto 42</p><p className="ml-8 text-sm text-on-surface-variant">Pinheiros, São Paulo - SP</p><p className="ml-8 mt-0.5 font-mono text-sm text-on-surface-variant">CEP: 05415-010</p></div><button type="button" className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-surface-container px-3 py-2.5 font-label-md text-primary hover:bg-surface-container-high"><Icon name="add_location_alt" />Adicionar Novo Endereço</button></Panel>
+              <Panel id="preferencias" className="scroll-mt-28"><h2 className="flex items-center gap-2 font-headline-md font-bold text-on-surface"><Icon name="tune" className="text-primary" />Preferências de Contato</h2><p className="mt-1 text-sm text-on-surface-variant">Defina como prefere receber lembretes de consultas e vacinas</p><div className="my-5 space-y-4">{[["Lembretes via WhatsApp", "Mensagens automáticas 24h e 2h antes de cada consulta"], ["Alertas de Vacinação por E-mail", "Avisos 15 dias antes do vencimento do calendário vacinal"], ["Promoções e Clube PetExpress", "Novidades sobre brindes, cashback e descontos em parceiros"]].map(([label, detail], index) => <label key={label} className="flex cursor-pointer items-start gap-3"><input type="checkbox" checked={preferences[index]} onChange={(event) => setPreferences((current) => current.map((value, i) => i === index ? event.target.checked : value))} className="mt-1 h-5 w-5 rounded text-primary focus:ring-primary" /><span><span className="block font-label-md font-bold text-on-surface">{label}</span><span className="text-xs text-on-surface-variant">{detail}</span></span></label>)}</div><button type="button" onClick={() => { setSaved(true); window.setTimeout(() => setSaved(false), 2500); }} className="w-full rounded-full bg-primary py-2.5 font-label-md text-on-primary shadow-sm hover:bg-primary-container">{saved ? "Preferências Salvas" : "Salvar Preferências"}</button></Panel>
+            </aside>
           </div>
         </div>
       </main>

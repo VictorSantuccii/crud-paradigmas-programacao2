@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PetExpress - O melhor amigo do seu pet</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Quicksand:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-secondary-fixed-variant": "#6d3a00",
+          "tertiary-fixed": "#5cff9f",
+          "on-surface-variant": "#414751",
+          "inverse-on-surface": "#e8f2ff",
+          "primary": "#005da7",
+          "on-error-container": "#93000a",
+          "tertiary-container": "#00864a",
+          "primary-container": "#2976c7",
+          "secondary-container": "#fc9d41",
+          "primary-fixed": "#d4e3ff",
+          "tertiary": "#006a39",
+          "error": "#ba1a1a",
+          "on-surface": "#0f1d29",
+          "on-tertiary-fixed-variant": "#00522b",
+          "error-container": "#ffdad6",
+          "surface-tint": "#0060ac",
+          "surface-container-highest": "#d5e4f6",
+          "outline-variant": "#c1c7d3",
+          "on-primary-container": "#fdfcff",
+          "surface": "#f7f9ff",
+          "on-tertiary-fixed": "#00210e",
+          "on-secondary-container": "#6b3900",
+          "primary-fixed-dim": "#a4c9ff",
+          "outline": "#717783",
+          "secondary-fixed": "#ffdcc2",
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#d5e4f6",
+          "on-primary-fixed-variant": "#004883",
+          "on-primary": "#ffffff",
+          "surface-dim": "#cddbed",
+          "inverse-surface": "#24323f",
+          "on-secondary": "#ffffff",
+          "surface-container-high": "#dbeafc",
+          "on-secondary-fixed": "#2e1500",
+          "on-background": "#0f1d29",
+          "surface-container-lowest": "#ffffff",
+          "surface-bright": "#f7f9ff",
+          "on-tertiary-container": "#f6fff4",
+          "surface-container-low": "#edf4ff",
+          "surface-container": "#e3efff",
+          "on-primary-fixed": "#001c39",
+          "secondary": "#8f4e00",
+          "background": "#f7f9ff",
+          "on-error": "#ffffff",
+          "secondary-fixed-dim": "#ffb77a",
+          "tertiary-fixed-dim": "#2ee285",
+          "inverse-primary": "#a4c9ff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "base": "8px",
+          "gutter": "24px",
+          "margin-desktop": "48px",
+          "margin-mobile": "16px",
+          "container-max": "1200px"
+        },
+        "fontFamily": {
+          "body-md": [
+            "Montserrat"
+          ],
+          "headline-md": [
+            "Quicksand"
+          ],
+          "headline-lg": [
+            "Quicksand"
+          ],
+          "label-md": [
+            "Quicksand"
+          ],
+          "headline-lg-mobile": [
+            "Quicksand"
+          ],
+          "display-lg": [
+            "Quicksand"
+          ],
+          "body-lg": [
+            "Montserrat"
+          ]
+        },
+        "fontSize": {
+          "body-md": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-md": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg": [
+            "32px",
+            {
+              "lineHeight": "40px",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg-mobile": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "48px",
+            {
+              "lineHeight": "56px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "18px",
+            {
+              "lineHeight": "28px",
+              "fontWeight": "400"
+            }
+          ]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @layer base {
+    html {
+      color: #0f1d29;
+      background-color: #f7f9ff;
+    }
+  }
+  .soft-shadow {
+    box-shadow: 0 10px 25px rgba(0, 93, 167, 0.08);
+  }
+</style>
+<meta content="web_standard" name="shell-type"/>
+</head>
+<body class="font-body-md text-body-md antialiased text-on-surface bg-background">
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md shadow-sm">
+<div class="h-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center gap-gutter">
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 shrink-0" data-path="petexpress-landing-page" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span>PetExpress</span>
+</a>
+<nav class="hidden md:flex items-center gap-8" data-active-classes="text-primary font-bold">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-servicos" href="#">Serviços</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-consultas" href="#">Consultas</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-meus-pets" href="#">Meus Pets</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" data-path="petexpress-meu-perfil" href="#">Meu Perfil</a>
+</nav>
+<div class="flex items-center gap-3 shrink-0">
+<a class="hidden lg:inline-flex items-center justify-center px-4 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md shadow hover:bg-primary-container transition-colors" data-path="petexpress-agendar-consulta" href="#">
+        Agendar Consulta
+      </a>
+<button aria-label="Notificações" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<a aria-label="Perfil do usuário" class="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-container transition-colors" data-path="petexpress-meu-perfil" href="#">
+<div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-headline-md font-bold text-sm overflow-hidden">
+<span class="material-symbols-outlined text-lg">person</span>
+</div>
+</a>
+<button aria-label="Menu de navegação" class="md:hidden p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<div class="flex flex-col w-full">
+<div class="w-full bg-gradient-to-r from-primary-fixed via-surface-container to-surface-container-high relative overflow-hidden py-10 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max mx-auto relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+<div class="relative group">
+<div class="w-24 h-24 rounded-full overflow-hidden shadow-md bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="Close up warm portrait of a friendly smiling male pet owner in casual blue shirt with natural daylight and clean modern soft focus background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAslEWMaizTIy58b1mJzxQx1pugwUb8i2ykMf6E9DicVu-_POjqFiZG9jz66OqOQywECm0TsYh8dNvit17PppqDAZXX15oE7AxS_i70-MJjbjpwYdLjQ79QSlKI9T8yRw9ay8JRXwK6AB-3-CFpFWgqR6mdag7787CTJ-r5CC70WIJz70aoYuaL7XYLJ-8sWcY22XUg7MsRPgCzfzzWASKr9Didlpcqt5uywsn-9BAaX5FQ4epGf90fLA"/>
+</div>
+<span class="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-xs shadow-sm" title="Perfil Verificado">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3 flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">João da Silva</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed-dim text-on-primary-fixed-variant font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">stars</span>
+              Tutor Ativo desde 2023
+            </span>
+</div>
+<div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-on-surface-variant font-body-md text-body-md mt-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg text-primary">mail</span>
+              joao.silva@email.com
+            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg text-primary">phone_iphone</span>
+              (11) 98765-4321
+            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg text-primary">location_on</span>
+              São Paulo, Pinheiros
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-stretch sm:self-auto justify-end">
+<button class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md font-bold shadow-sm hover:bg-surface-container-low transition-all duration-200" type="button">
+<span class="material-symbols-outlined text-lg">edit</span>
+          Editar Perfil
+        </button>
+<button aria-label="Configurações da conta" class="w-10 h-10 rounded-full bg-surface-container-lowest text-on-surface-variant flex items-center justify-center shadow-sm hover:text-primary hover:bg-surface-container-low transition-all duration-200" type="button">
+<span class="material-symbols-outlined text-xl">settings</span>
+</button>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-8 flex flex-col gap-8">
+<div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+<button class="tab-trigger inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold shadow-sm whitespace-nowrap transition-colors" data-target="geral" type="button">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+        Visão Geral &amp; Dados
+      </button>
+<button class="tab-trigger inline-flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container font-semibold whitespace-nowrap transition-colors" data-target="pets" type="button">
+<span class="material-symbols-outlined text-lg">pets</span>
+        Meus Pets &amp; Carteirinhas
+      </button>
+<button class="tab-trigger inline-flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container font-semibold whitespace-nowrap transition-colors" data-target="consultas" type="button">
+<span class="material-symbols-outlined text-lg">medical_services</span>
+        Histórico de Consultas &amp; Vacinas
+      </button>
+<button class="tab-trigger inline-flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container font-semibold whitespace-nowrap transition-colors" data-target="enderecos" type="button">
+<span class="material-symbols-outlined text-lg">home_pin</span>
+        Endereços &amp; Preferências
+      </button>
+</div>
+<section aria-label="Resumo Rápido" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-semibold">Pets Cadastrados</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">pets</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg font-bold text-on-surface leading-none">2</span>
+<span class="font-body-md text-body-md text-on-surface-variant">pets (Thor e Miau)</span>
+</div>
+<div class="mt-3 flex items-center gap-1.5 font-label-md text-label-md text-tertiary font-semibold">
+<span class="material-symbols-outlined text-base">check_circle</span>
+          Todos os perfis completos
+        </div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-semibold">Próxima Consulta</span>
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">calendar_clock</span>
+</div>
+</div>
+<div class="mt-4">
+<span class="font-headline-md text-headline-md font-bold text-on-surface block">18 Out às 14:00</span>
+<span class="font-body-md text-body-md text-on-surface-variant block">Dr. Carlos Mendes</span>
+</div>
+<div class="mt-3 inline-flex items-center gap-1 font-label-md text-label-md text-primary font-bold">
+          Thor • Check-up Periódico
+        </div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-semibold">Vacinas em Dia</span>
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg font-bold text-tertiary leading-none">100%</span>
+<span class="font-body-md text-body-md text-on-surface-variant">imunizados</span>
+</div>
+<div class="mt-3 w-full bg-surface-container rounded-full h-2 overflow-hidden">
+<div class="bg-tertiary h-full rounded-full w-full"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant font-semibold">Clube PetExpress</span>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">loyalty</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg font-bold text-secondary leading-none">450</span>
+<span class="font-body-md text-body-md text-on-surface-variant">pontos</span>
+</div>
+<div class="mt-3 flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Nível Prata</span>
+<a class="font-label-md text-label-md text-primary font-bold hover:underline" href="#">Resgatar →</a>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<div class="lg:col-span-8 flex flex-col gap-8">
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">badge</span>
+                Carteirinha Digital dos Pets
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Identificação médica, registro de microchip e dados essenciais</p>
+</div>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-bold hover:bg-primary hover:text-on-primary transition-all duration-200" type="button">
+<span class="material-symbols-outlined text-lg">add</span>
+              Adicionar Pet
+            </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-start gap-4">
+<div class="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container shadow-sm">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Playful happy golden retriever dog facing forward wearing a blue collar outdoors on a bright sunny day" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDo9Fq2Xn1VnJxedBWcaTWqQxvmlwxw3IxADCGqrs84VWnXmH_EwjdFftp3xfgZfwmgFd6_8EhhyUKgQALB-wgGSyClQ4mhldFJiXuQvQ9Avt7b8eOJFAv9GL7mgmxLbHap52xssz1YhJ-hI6fuK0BzsX3AIe-Zxiu7mEYcEM2wp4VemTpfmK0m4FFSXx_PidwEyeWfovCU_-qhKpubOU5R8hEoatTM0XESZTMYTD48M52r0izkiJVqLQ"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface truncate">Thor</h3>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-xs font-bold uppercase font-label-md">Cão</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant font-medium">Golden Retriever</span>
+<div class="flex items-center gap-3 font-label-md text-label-md text-on-surface-variant mt-1">
+<span>3 anos</span>
+<span>•</span>
+<span>28.4 kg</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-3 flex flex-col gap-1.5 text-xs">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Microchip:</span>
+<span class="font-mono text-on-surface">981098124792102</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Plano de Saúde:</span>
+<span class="text-tertiary font-bold">PetCare Plus Ativo</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Última Vacina:</span>
+<span class="text-on-surface">V10 (Julho 2024)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1">
+<button class="w-full py-2.5 px-3 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold hover:bg-primary-container transition-colors flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-base">clinical_notes</span>
+                  Histórico Clínico e Vacinas
+                </button>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-start gap-4">
+<div class="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container shadow-sm">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Charming sleek domestic shorthair cat with vibrant green eyes relaxing gracefully on a cozy light colored cushion" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8Ssp02FHepaLDpEIgstxWg3ZJBHEGiyWPp24D69oNRWypAc4xsAMuXmFUmNt0m6s1cX6vo5CS0bdhQ19pGMGXj9xhiYwh5cgV43FZJoXmJWqcbxF1zM4UInfmcxFH7xkAemS6NM0-L9fsK3gqJ-3RcATXL5ncJdCxGtv8YDzLrQ5j47N8mu4fWmqrmXjBxU8o2trdoM6-HxdXd98Gr1I1z4uaMkiCMNWfpRyCwkZyKgJ-hIpJXRPL7Q"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface truncate">Miau</h3>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-xs font-bold uppercase font-label-md">Gato</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant font-medium">Siamês Mestiço</span>
+<div class="flex items-center gap-3 font-label-md text-label-md text-on-surface-variant mt-1">
+<span>2 anos</span>
+<span>•</span>
+<span>4.2 kg</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-3 flex flex-col gap-1.5 text-xs">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Microchip:</span>
+<span class="font-mono text-on-surface">981098124995341</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Plano de Saúde:</span>
+<span class="text-tertiary font-bold">PetCare Básico Ativo</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-semibold">Última Vacina:</span>
+<span class="text-on-surface">Tríplice Felina (Ago 2024)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1">
+<button class="w-full py-2.5 px-3 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold hover:bg-primary-container transition-colors flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-base">clinical_notes</span>
+                  Histórico Clínico e Vacinas
+                </button>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+                Histórico Clínico &amp; Consultas
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Registro cronológico de diagnósticos, receitas emitidas e retornos</p>
+</div>
+<button class="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-1" type="button">
+              Ver histórico completo
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<div class="bg-surface-container-low rounded-xl p-5 flex flex-col gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-3">
+<span class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">
+<span class="material-symbols-outlined">stethoscope</span>
+</span>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold text-base md:text-lg">Check-up Semestral e Vacina Antirrábica</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Pet: <strong class="text-on-surface">Thor</strong> • Realizado em 14 de Agosto de 2024</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-md text-label-md font-bold self-start sm:self-auto">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                  Concluído
+                </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-lg">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold mb-1">Médico Veterinário</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">person</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">Dr. Carlos Mendes (CRMV-SP 24.512)</span>
+</div>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold mb-1">Diagnóstico &amp; Observações</span>
+<p class="font-body-md text-body-md text-on-surface">Evolução física excelente. Peso controlado e dentes sem tártaro.</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary">medication</span>
+<span>Prescrição: Apoquel 16mg e Vermífugo NexGard Spectra</span>
+</div>
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-surface-container-highest text-primary font-label-md text-label-md font-bold hover:bg-primary-fixed transition-colors" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+                  Baixar Receita PDF
+                </button>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5 flex flex-col gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-3">
+<span class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-bold">
+<span class="material-symbols-outlined">health_and_safety</span>
+</span>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface font-bold text-base md:text-lg">Avaliação Dermatológica &amp; Limpeza Auricular</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Pet: <strong class="text-on-surface">Miau</strong> • Realizado em 22 de Julho de 2024</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md font-bold self-start sm:self-auto">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                  Retorno Agendado
+                </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-lg">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold mb-1">Médico Veterinário</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">person</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">Dra. Amanda Nogueira (CRMV-SP 31.884)</span>
+</div>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold mb-1">Diagnóstico &amp; Observações</span>
+<p class="font-body-md text-body-md text-on-surface">Leve hipersensibilidade alérgica no pavilhão auditivo direito.</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+<div class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary">medication</span>
+<span>Prescrição: Otite Solution 15ml + Pomada calmante</span>
+</div>
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-surface-container-highest text-primary font-label-md text-label-md font-bold hover:bg-primary-fixed transition-colors" type="button">
+<span class="material-symbols-outlined text-base">download</span>
+                  Baixar Receita PDF
+                </button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-8">
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">person_pin</span>
+              Dados Pessoais
+            </h2>
+<button class="text-primary hover:text-primary-container p-1" title="Editar dados" type="button">
+<span class="material-symbols-outlined text-xl">edit_square</span>
+</button>
+</div>
+<div class="flex flex-col gap-4 text-on-surface font-body-md text-body-md">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold">Nome Completo</span>
+<p class="font-medium mt-0.5">João Batista da Silva</p>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold">CPF</span>
+<p class="font-medium mt-0.5 font-mono">123.456.789-00</p>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold">E-mail Principal</span>
+<p class="font-medium mt-0.5">joao.silva@email.com</p>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant block font-semibold">Telefone / WhatsApp</span>
+<p class="font-medium mt-0.5">+55 (11) 98765-4321</p>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">location_city</span>
+              Endereço Residencial
+            </h2>
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-xs font-bold font-label-md">Principal</span>
+</div>
+<div class="flex flex-col gap-3 font-body-md text-body-md">
+<div class="bg-surface-container-low p-4 rounded-xl flex flex-col gap-2">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary mt-0.5">home</span>
+<div>
+<p class="font-bold text-on-surface">Rua das Flores, 123 - Apto 42</p>
+<p class="text-on-surface-variant text-sm">Pinheiros, São Paulo - SP</p>
+<p class="text-on-surface-variant text-sm font-mono mt-0.5">CEP: 05415-010</p>
+</div>
+</div>
+</div>
+<button class="w-full py-2.5 rounded-full bg-surface-container text-primary font-label-md text-label-md font-bold hover:bg-surface-container-high transition-colors flex items-center justify-center gap-1.5 mt-1" type="button">
+<span class="material-symbols-outlined text-lg">add_location_alt</span>
+              Adicionar Novo Endereço
+            </button>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">tune</span>
+              Preferências de Contato
+            </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Defina como prefere receber lembretes de consultas e vacinas</p>
+</div>
+<div class="flex flex-col gap-4">
+<label class="flex items-start gap-3 cursor-pointer select-none">
+<input checked="" class="mt-1 w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">Lembretes via WhatsApp</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-xs">Mensagens automáticas 24h e 2h antes de cada consulta</span>
+</div>
+</label>
+<label class="flex items-start gap-3 cursor-pointer select-none">
+<input checked="" class="mt-1 w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">Alertas de Vacinação por E-mail</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-xs">Avisos 15 dias antes do vencimento do calendário vacinal</span>
+</div>
+</label>
+<label class="flex items-start gap-3 cursor-pointer select-none">
+<input class="mt-1 w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">Promoções e Clube PetExpress</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-xs">Novidades sobre brindes, cashback e descontos em parceiros</span>
+</div>
+</label>
+</div>
+<button class="w-full py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold hover:bg-primary-container transition-colors shadow-sm" type="button">
+            Salvar Preferências
+          </button>
+</section>
+</div>
+</div>
+</div>
+<script>
+    document.querySelectorAll('.tab-trigger').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-trigger').forEach(btn => {
+          btn.classList.remove('bg-primary', 'text-on-primary');
+          btn.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+        });
+        button.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+        button.classList.add('bg-primary', 'text-on-primary');
+      });
+    });
+  </script>
+</div>
+</main>
+<footer class="w-full py-12 px-margin-mobile md:px-margin-desktop bg-surface-container-highest mt-16">
+<div class="max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 mb-4" data-path="petexpress-landing-page" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span>PetExpress</span>
+</a>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6 max-w-sm">
+        Cuidando do seu melhor amigo com dedicação, tecnologia e muito carinho.
+      </p>
+<p class="text-label-md font-label-md text-on-surface-variant">
+        © 2024 PetExpress - O melhor amigo do seu pet. Todos os direitos reservados.
+      </p>
+</div>
+<div class="flex flex-col md:items-end justify-center">
+<nav class="flex flex-wrap gap-4 md:gap-8 justify-start md:justify-end">
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Sobre Nós</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Política de Privacidade</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Termos de Uso</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Contato</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Trabalhe Conosco</a>
+</nav>
+<div class="flex gap-4 mt-8">
+<a aria-label="Compartilhar" class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">share</span>
+</a>
+<a aria-label="E-mail de suporte" class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors soft-shadow" href="#">
+<span class="material-symbols-outlined text-lg">mail</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

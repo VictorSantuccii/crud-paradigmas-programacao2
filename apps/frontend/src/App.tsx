@@ -13,6 +13,7 @@ export function App() {
       <Route path="/servicos" element={<ServicosPage />} />
       <Route path="/consultas" element={<ConsultasPage />} />
       <Route path="/meus-pets" element={<MeusPetsPage />} />
+      <Route path="/meu-perfil" element={<MeusPetsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
     </Routes>
