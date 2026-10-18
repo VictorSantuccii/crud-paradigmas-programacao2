@@ -18,6 +18,8 @@ export const findAll = () => prisma.usuario.findMany({ orderBy: { id: "desc" } }
 
 export const findById = (id: number) => prisma.usuario.findUnique({ where: { id } });
 
+export const findByEmail = (email: string) => prisma.usuario.findUnique({ where: { email } });
+
 export const findByFidelidadeId = (fidelidadeId: number) =>
   prisma.usuario.findUnique({ where: { fidelidadeId } });
 

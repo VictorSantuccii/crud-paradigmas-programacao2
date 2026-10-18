@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 
 export class HttpError extends Error {
   constructor(
-    public readonly status: 400 | 404 | 409,
+    public readonly status: 400 | 401 | 404 | 409,
     message: string,
   ) {
     super(message);
@@ -12,6 +12,7 @@ export class HttpError extends Error {
 }
 
 export const badRequest = (message: string) => new HttpError(400, message);
+export const unauthorized = (message: string) => new HttpError(401, message);
 export const notFound = (message: string) => new HttpError(404, message);
 export const conflict = (message: string) => new HttpError(409, message);
 
