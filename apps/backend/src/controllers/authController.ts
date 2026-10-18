@@ -28,6 +28,14 @@ export const entrar = async (request: Request, response: Response) => {
   response.json({ usuario });
 };
 
+export const entrarComGoogle = async (request: Request, response: Response) => {
+  const resultado = await authService.entrarComGoogle(request.body);
+  if ("requiresCpf" in resultado) return response.json(resultado);
+
+  response.cookie(COOKIE_SESSAO, resultado.token, opcoesCookie());
+  return response.json({ usuario: resultado.usuario });
+};
+
 export const atual = async (request: Request, response: Response) => {
   const usuario = await authService.consultarSessao(tokenDaRequisicao(request));
   if (!usuario) return response.status(401).json({ message: "Sessão não encontrada ou expirada." });

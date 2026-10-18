@@ -8,13 +8,13 @@ export function Hero() {
     <section className="relative w-full overflow-hidden bg-surface-container-low px-margin-mobile pt-12 pb-24 md:px-margin-desktop md:pt-24 md:pb-32">
       <div className="mx-auto grid max-w-container-max grid-cols-1 items-center gap-12 md:grid-cols-2">
         <div className="z-10">
-          <h1 className="mb-6 font-headline-lg-mobile text-on-surface md:font-display-lg md:text-display-lg">
+          <h1 className="motion-rise-in motion-delay-1 mb-6 font-headline-lg-mobile text-on-surface md:font-display-lg md:text-display-lg">
             {heroContent.title}
           </h1>
-          <p className="mb-8 max-w-lg font-body-lg text-on-surface-variant">
+          <p className="motion-rise-in motion-delay-2 mb-8 max-w-lg font-body-lg text-on-surface-variant">
             {heroContent.description}
           </p>
-          <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="motion-rise-in motion-delay-3 flex flex-col gap-4 sm:flex-row">
             <Link to="/servicos">
               <Button className="w-full sm:w-auto">
                 Agendar Agora
@@ -28,14 +28,14 @@ export function Hero() {
             </Link>
           </div>
         </div>
-        <div className="relative h-[400px] w-full overflow-hidden rounded-[2rem] soft-shadow md:h-[600px]">
+        <div className="motion-slide-in relative h-[400px] w-full overflow-hidden rounded-[2rem] soft-shadow md:h-[600px]">
           <img
             src={heroContent.image}
             alt={heroContent.imageAlt}
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          <div className="absolute -bottom-6 -left-6 h-32 w-32 rounded-full bg-secondary-container opacity-50 mix-blend-multiply blur-2xl" />
-          <div className="absolute -top-6 -right-6 h-40 w-40 rounded-full bg-tertiary-container opacity-30 mix-blend-multiply blur-2xl" />
+          <div className="ambient-drift absolute -bottom-6 -left-6 h-32 w-32 rounded-full bg-secondary-container opacity-50 mix-blend-multiply blur-2xl" />
+          <div className="ambient-drift ambient-drift-delay absolute -top-6 -right-6 h-40 w-40 rounded-full bg-tertiary-container opacity-30 mix-blend-multiply blur-2xl" />
         </div>
       </div>
     </section>
