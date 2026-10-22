@@ -6,22 +6,14 @@ export const petOptions: PetOption[] = [
   { value: "novo", label: "+ Adicionar novo pet" },
 ];
 
-export const calendarDays: CalendarDay[] = [
-  { day: 1, disabled: true },
-  { day: 2, disabled: true },
-  { day: 3, disabled: false },
-  { day: 4, disabled: false },
-  { day: 5, disabled: false },
-  { day: 6, disabled: false, dot: true },
-  { day: 7, disabled: false },
-  { day: 8, disabled: false },
-  { day: 9, disabled: false },
-  { day: 10, disabled: false },
-  { day: 11, disabled: false },
-  { day: 12, disabled: false },
-  { day: 13, disabled: false },
-  { day: 14, disabled: false },
-];
+export const calendarDays: CalendarDay[] = Array.from(
+  { length: 31 },
+  (_, index) => ({
+    day: index + 1,
+    disabled: index + 1 < 23,
+    dot: [24, 27, 30].includes(index + 1),
+  }),
+);
 
 export const timeSlots: TimeSlot[] = [
   { time: "09:00", available: true },

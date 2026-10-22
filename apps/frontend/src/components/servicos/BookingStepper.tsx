@@ -7,47 +7,46 @@ type BookingStepperProps = {
 };
 
 export function BookingStepper({ steps }: BookingStepperProps) {
+  const activeIndex = steps.reduce(
+    (lastActive, step, index) => (step.active ? index : lastActive),
+    -1,
+  );
+
   return (
-    <div className="mb-12 flex w-full justify-center">
-      <div className="flex w-full max-w-2xl items-center gap-2 md:gap-4">
+    <div className="mx-auto flex w-full max-w-container-max items-center justify-between gap-2 md:gap-4">
         {steps.map((step, index) => (
-          <div key={step.id} className="contents">
+          <div key={step.id} className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <div
               className={cn(
-                "flex flex-col items-center gap-2",
+                "flex shrink-0 items-center gap-2 sm:gap-3",
                 step.active ? "text-primary" : "text-outline-variant",
               )}
             >
               <div
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-full",
-                  step.active
-                    ? "bg-primary text-on-primary shadow-md"
-                    : "bg-surface-variant",
+                  index <= activeIndex
+                    ? "bg-primary text-on-primary"
+                    : "bg-surface-container-high text-on-surface-variant",
                 )}
               >
-                <Icon name={step.icon} filled={step.active} />
+                <Icon name={step.icon} filled={index <= activeIndex} />
               </div>
-              <span
-                className={cn(
-                  "hidden font-label-md md:block",
-                  step.active && "font-bold",
-                )}
-              >
-                {step.label}
-              </span>
+              <div className="hidden sm:block">
+                <p className="font-label-md text-primary">Passo {index + 1}</p>
+                <p className="whitespace-nowrap text-sm font-bold text-on-surface">{step.label}</p>
+              </div>
             </div>
             {index < steps.length - 1 ? (
               <div
                 className={cn(
-                  "h-1 flex-1 rounded-full",
-                  step.active ? "bg-primary-fixed" : "bg-surface-variant",
+                  "h-1 min-w-2 flex-1 rounded-full",
+                  index < activeIndex ? "bg-primary" : "bg-surface-container-highest",
                 )}
               />
             ) : null}
           </div>
         ))}
-      </div>
     </div>
   );
 }
