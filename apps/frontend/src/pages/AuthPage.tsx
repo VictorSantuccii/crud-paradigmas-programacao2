@@ -1,3 +1,6 @@
+import { dadosContato } from "@/auth/profile-data";
+import { ProfileFields } from "@/components/auth/ProfileFields";
+import { guardarDestino, destinoInterno } from "@/auth/destination";
 import { Icon } from "@/components/ui/Icon";
 import { useAuth } from "@/auth/useAuth";
 import type { Usuario } from "@/auth/types";
@@ -74,25 +77,26 @@ export function AuthPage({ initialTab }: { initialTab: AuthTab }) {
       credentials: "include",
       body: JSON.stringify({ idToken }),
     });
-    const payload = await response.json() as { message?: string; requiresCpf?: boolean; usuario?: Usuario };
+    const payload = await response.json() as { message?: string; requiresOnboarding?: boolean; usuario?: Usuario };
     if (!response.ok) throw new Error(payload.message || "Não foi possível autenticar com Google.");
-    if (payload.requiresCpf) {
-      const from = (location.state as { from?: string } | null)?.from;
-      navigate("/cadastro/google/cpf", { state: { idToken, from } });
-      return;
-    }
-    if (!payload.usuario) throw new Error("A resposta da autenticação não trouxe os dados do usuário.");
-    atualizarUsuario(payload.usuario);
     const [{ signOut }, { obterFirebaseAuth }] = await Promise.all([
       import("firebase/auth"),
       import("@/lib/firebase"),
     ]);
     await signOut(obterFirebaseAuth()).catch(() => undefined);
-    const destino = (location.state as { from?: string } | null)?.from || "/meu-perfil";
-    navigate(destino, { replace: true });
+    if (payload.requiresOnboarding) {
+      const from = (location.state as { from?: string } | null)?.from;
+      navigate("/cadastro/google/cpf", { state: { from: guardarDestino(from) } });
+      return;
+    }
+    if (!payload.usuario) throw new Error("A resposta da autenticação não trouxe os dados do usuário.");
+    atualizarUsuario(payload.usuario);
+    const destino = destinoInterno((location.state as { from?: string } | null)?.from);
+    navigate(payload.usuario.role === "CLIENTE" && !payload.usuario.perfilCompleto ? "/cadastro/google/cpf" : destino, { replace: true, state: { from: guardarDestino(destino) } });
   }
 
   async function handleGoogleAuth() {
+    if (submitting) return;
     setNotice("");
     setError("");
     setSubmitting(true);
@@ -116,6 +120,7 @@ export function AuthPage({ initialTab }: { initialTab: AuthTab }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setNotice("");
     setError("");
     const form = new FormData(event.currentTarget);
@@ -133,15 +138,15 @@ export function AuthPage({ initialTab }: { initialTab: AuthTab }) {
         credentials: "include",
         body: JSON.stringify(tab === "login"
           ? { email, senha }
-          : { email, senha, nome: form.get("nome"), cpf: form.get("cpf"), confirmarSenha: form.get("confirmarSenha") }),
+          : { ...dadosContato(form), email, senha, nome: form.get("nome"), cpf: form.get("cpf"), confirmarSenha: form.get("confirmarSenha") }),
       });
       const payload = await response.json() as { message?: string; usuario?: Usuario };
       if (!response.ok) throw new Error(payload.message || "Não foi possível autenticar.");
       if (!payload.usuario) throw new Error("A resposta da autenticação não trouxe os dados do usuário.");
       atualizarUsuario(payload.usuario);
       setNotice(tab === "login" ? "Login realizado com sucesso." : "Conta criada com sucesso.");
-      const destino = (location.state as { from?: string } | null)?.from || "/meu-perfil";
-      navigate(destino, { replace: true });
+      const destino = destinoInterno((location.state as { from?: string } | null)?.from);
+      navigate(payload.usuario.role === "CLIENTE" && !payload.usuario.perfilCompleto ? "/cadastro/google/cpf" : destino, { replace: true, state: { from: guardarDestino(destino) } });
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Falha ao conectar com o servidor.");
     } finally {
@@ -204,11 +209,12 @@ export function AuthPage({ initialTab }: { initialTab: AuthTab }) {
                 </div>
               ) : (
                 <div key={tab} role="tabpanel" className="auth-panel-enter">
-                  <div className="mb-6"><h2 className="font-headline-lg text-2xl font-bold text-on-surface">Crie seu perfil de tutor</h2><p className="mt-1 text-on-surface-variant">Leva menos de 1 minuto para cadastrar você e seu melhor amigo.</p></div>
+                  <div className="mb-6"><h2 className="font-headline-lg text-2xl font-bold text-on-surface">Crie seu perfil de tutor</h2><p className="mt-1 text-on-surface-variant">Preencha seus dados para cuidar do seu melhor amigo.</p></div>
                   <form className="space-y-3.5" onSubmit={handleSubmit}>
                     <AuthInput id="nome" name="nome" label="Nome Completo" icon="person" placeholder="Ex: Carlos Eduardo de Oliveira" />
                     <AuthInput id="email" name="email" label="E-mail" icon="mail" type="email" placeholder="carlos@exemplo.com" />
                     <AuthInput id="cpf" name="cpf" label="CPF" icon="badge" placeholder="000.000.000-00" />
+                    <ProfileFields />
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><label htmlFor="reg-senha" className="mb-1 block font-label-md text-on-surface">Criar Senha</label><input id="reg-senha" name="senha" type="password" minLength={8} required placeholder="Mín. 8 dígitos" autoComplete="new-password" className="w-full rounded-lg bg-surface-container-lowest px-3.5 py-2.5 shadow-sm ring-1 ring-outline-variant outline-none focus:ring-2 focus:ring-primary" /></div><div><label htmlFor="reg-password-confirm" className="mb-1 block font-label-md text-on-surface">Confirmar Senha</label><input id="reg-password-confirm" name="confirmarSenha" type="password" minLength={8} required placeholder="Repita a senha" autoComplete="new-password" className="w-full rounded-lg bg-surface-container-lowest px-3.5 py-2.5 shadow-sm ring-1 ring-outline-variant outline-none focus:ring-2 focus:ring-primary" /></div></div>
                     <div className="space-y-2.5 pt-2 text-sm text-on-surface-variant"><label className="flex items-start gap-2.5"><input type="checkbox" required className="mt-1 rounded text-primary focus:ring-primary" /><span>Concordo com os <a href="#termos" className="text-primary underline">Termos de Serviço</a> e a <a href="#privacidade" className="text-primary underline">Política de Privacidade</a> do PetExpress.</span></label><label className="flex items-start gap-2.5"><input type="checkbox" defaultChecked className="mt-1 rounded text-tertiary focus:ring-tertiary" /><span>Desejo receber lembretes de consultas, campanhas de vacinação e ofertas via WhatsApp.</span></label></div>
                     <button disabled={submitting} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 font-headline-md font-bold text-on-primary shadow-md transition hover:bg-primary-container disabled:opacity-60">{submitting ? "Criando conta…" : "Criar Minha Conta Gratuita"} <Icon name="pets" /></button>

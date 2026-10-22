@@ -22,7 +22,8 @@ const entidades: Record<string, Entidade> = {
       email: { type: "string", format: "email", nullable: true, example: "ana@email.com" },
       senha: { type: "string", writeOnly: true, example: "senha-segura" },
       role: { type: "string", enum: ["CLIENTE", "FUNCIONARIO", "ADMIN"] },
-      cpf: { type: "string", example: "123.456.789-00" },
+      cpf: { type: "string", example: "529.982.247-25", description: "CPF válido; saída sem máscara." },
+      telefone: { type: "string", nullable: true, example: "11999991234" },
       nome: { type: "string", example: "Ana Souza" },
     },
     obrigatorios: ["senha", "role", "cpf", "nome"],
@@ -33,7 +34,12 @@ const entidades: Record<string, Entidade> = {
         description: "Fidelidade existente e livre. Sem ela, uma nova é criada.",
       },
     },
-    somenteSaida: { fidelidadeId: idReferencia },
+    somenteSaida: {
+      fidelidadeId: idReferencia,
+      funcionarioId: { ...idReferencia, nullable: true },
+      perfilCompleto: { type: "boolean" },
+      camposPendentes: { type: "array", items: { type: "string" } },
+    },
     foraDaSaida: ["senha"],
   },
   Fidelidade: {
@@ -170,7 +176,7 @@ const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
     title: "API Pet Shop",
-    version: "2.0.0",
+    version: "2.1.0",
     description:
       "API REST de usuários, animais, planos, assinaturas, serviços, funcionários e agendamentos com Express e Prisma.",
   },
@@ -180,7 +186,12 @@ const swaggerDefinition = {
       description: "Servidor local",
     },
   ],
+  security: [{ CookieSession: [] }],
   components: {
+    securitySchemes: {
+      CookieSession: { type: "apiKey", in: "cookie", name: "petshop_session" },
+      OnboardingCookie: { type: "apiKey", in: "cookie", name: "petshop_onboarding" },
+    },
     parameters: {
       Id: {
         in: "path",
@@ -221,4 +232,18 @@ const swaggerOptions = {
   apis: ["./src/routes/*.ts"],
 };
 
-export const swaggerSpec = swaggerJSDoc(swaggerOptions);
+export const swaggerSpec = swaggerJSDoc(swaggerOptions) as { paths: Record<string, unknown> };
+Object.assign(swaggerSpec.paths!, {
+  "/auth/cadastro": { post: { summary: "Cadastra um cliente", security: [], requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["nome", "email", "cpf", "senha", "telefone", "endereco"], properties: { nome: { type: "string" }, email: { type: "string", format: "email" }, cpf: { type: "string" }, senha: { type: "string", minLength: 8 }, confirmarSenha: { type: "string" }, telefone: { type: "string" }, endereco: { type: "object", required: ["cep", "rua", "bairro", "numero"], properties: { cep: { type: "string" }, rua: { type: "string" }, bairro: { type: "string" }, numero: { type: "integer", minimum: 0 }, complemento: { type: "string", nullable: true } } } } } } } }, responses: { "201": { description: "Cliente criado; cookie petshop_session emitido" }, "400": { description: "Entrada inválida ou campo privilegiado" }, "409": { description: "E-mail ou CPF já cadastrado" } } } },
+  "/auth/login": { post: { summary: "Inicia sessão por e-mail e senha", security: [], responses: { "200": { description: "Sessão criada" }, "401": { description: "Credenciais inválidas" } } } },
+  "/auth/google": { post: { summary: "Autentica ID token Firebase validado pelo backend", security: [], responses: { "200": { description: "Sessão ou onboarding iniciado" } } } },
+  "/auth/me": { get: { summary: "Consulta perfil e completude atual" }, put: { summary: "Atualiza perfil próprio; CPF válido não pode ser alterado", responses: { "200": { description: "Perfil atualizado" }, "400": { description: "Dados inválidos ou campo privilegiado" }, "403": { description: "Endereço pertence a outra conta" } } } },
+  "/auth/onboarding": { get: { summary: "Retoma onboarding Google", security: [{ OnboardingCookie: [] }], responses: { "200": { description: "Identidade verificada e campos pendentes" }, "401": { description: "Onboarding expirado" } } }, put: { summary: "Conclui onboarding Google e emite sessão normal", security: [{ OnboardingCookie: [] }], responses: { "201": { description: "Cliente criado e sessão emitida" }, "401": { description: "Onboarding expirado" }, "409": { description: "CPF ou e-mail já cadastrado" } } } },
+  "/auth/logout": { post: { summary: "Revoga sessões comuns e temporárias", security: [], responses: { "204": { description: "Sessão encerrada" } } } },
+});
+for (const [path, item] of Object.entries(swaggerSpec.paths!)) {
+  if (path === "/servicos" || path === "/servicos/{id}") {
+    const operations = item as Record<string, { security?: unknown[] }>;
+    for (const [method, operation] of Object.entries(operations)) if (method === "get") operation.security = [];
+  }
+}

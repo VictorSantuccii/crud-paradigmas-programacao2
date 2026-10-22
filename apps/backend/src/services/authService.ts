@@ -1,173 +1,111 @@
-import { randomBytes } from "node:crypto";
-import { Role } from "@prisma/client";
-import { badRequest, conflict, unauthorized } from "../lib/errors";
-import prisma from "../lib/prisma";
-import { verificarSenha } from "../lib/password";
-import { verificarTokenFirebase } from "../lib/firebaseAdmin";
-import redis from "../lib/redis";
-import * as usuarioRepository from "../repositories/usuarioRepository";
-import { create as criarUsuario } from "./usuarioService";
+import { randomBytes } from 'node:crypto';
+import { Prisma } from '@prisma/client';
+import { badRequest, forbidden, unauthorized } from '../lib/errors';
+import prisma from '../lib/prisma';
+import { hashSenha, verificarSenha } from '../lib/password';
+import { verificarTokenFirebase } from '../lib/firebaseAdmin';
+import redis from '../lib/redis';
+import * as v from '../lib/identity';
+import { idReferencia, texto } from '../lib/parsers';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const DURACAO_SESSAO_SEGUNDOS = 60 * 60 * 24 * 30;
-
-export type UsuarioPublico = {
-  id: number;
-  nome: string;
-  email: string | null;
-  cpf: string;
-  role: Role;
-  fotoURL: string | null;
-  enderecos: Array<{
-    id: number;
-    rua: string;
-    numero: number;
-    complemento: string | null;
-    bairro: string;
-    cep: string;
-  }>;
-};
-
-const publico = (usuario: {
-  id: number;
-  nome: string;
-  email: string | null;
-  cpf: string;
-  role: Role;
-  fotoURL?: string | null;
-  enderecos?: UsuarioPublico["enderecos"];
-}): UsuarioPublico => ({
-  id: usuario.id,
-  nome: usuario.nome,
-  email: usuario.email,
-  cpf: usuario.cpf,
-  role: usuario.role,
-  fotoURL: usuario.fotoURL ?? null,
-  enderecos: usuario.enderecos ?? [],
-});
-
-const validarEmail = (value: unknown) => {
-  if (typeof value !== "string" || !EMAIL_REGEX.test(value.trim())) {
-    throw badRequest("Informe um e-mail válido.");
-  }
-  return value.trim().toLowerCase();
-};
-
-const validarSenha = (value: unknown) => {
-  if (typeof value !== "string" || value.length < 8) {
-    throw badRequest("A senha deve ter pelo menos 8 caracteres.");
-  }
-  return value;
-};
-
+export const DURACAO_ONBOARDING = 30 * 60;
+export const usuarioSelect = { id: true, nome: true, email: true, cpf: true, telefone: true, role: true, funcionarioId: true, fidelidadeId: true, enderecos: { select: { id: true, rua: true, numero: true, complemento: true, bairro: true, cep: true } } } satisfies Prisma.UsuarioSelect;
+type UsuarioDados = Prisma.UsuarioGetPayload<{ select: typeof usuarioSelect }>;
+export const publico = (usuario: UsuarioDados) => ({ id: usuario.id, nome: usuario.nome, email: usuario.email, cpf: usuario.cpf, telefone: usuario.telefone, role: usuario.role, funcionarioId: usuario.funcionarioId, fidelidadeId: usuario.fidelidadeId, enderecos: usuario.enderecos, perfilCompleto: v.perfilCompleto(usuario), camposPendentes: v.camposPendentes(usuario), fotoURL: null as string | null });
+export type UsuarioPublico = ReturnType<typeof publico>;
 const novaSessao = async (usuario: UsuarioPublico) => {
-  const token = randomBytes(32).toString("base64url");
-  await redis.set(`sessao:${token}`, JSON.stringify(usuario), { EX: DURACAO_SESSAO_SEGUNDOS });
+  const token = randomBytes(32).toString('base64url');
+  await redis.set(`sessao:${token}`, JSON.stringify({ id: usuario.id }), { EX: DURACAO_SESSAO_SEGUNDOS });
   return { token, usuario };
 };
-
+const criarCliente = async (dados: { nome: string; email: string; cpf: string; telefone: string; senha: string; endereco: ReturnType<typeof v.endereco> }) => {
+  const senhaHash = await hashSenha(dados.senha);
+  return prisma.usuario.create({ data: { nome: dados.nome, email: dados.email, cpf: dados.cpf, telefone: dados.telefone, senhaHash, role: 'CLIENTE', fidelidade: { create: { beneficioAtivo: false, qntdServicos: 0 } }, enderecos: { create: dados.endereco } }, select: usuarioSelect });
+};
 export const cadastrar = async (entrada: unknown) => {
-  if (typeof entrada !== "object" || entrada === null || Array.isArray(entrada)) {
-    throw badRequest("O corpo da requisição deve ser um objeto JSON.");
-  }
-  const body = entrada as Record<string, unknown>;
-  const email = validarEmail(body.email);
-  const senha = validarSenha(body.senha);
-  if (typeof body.nome !== "string" || !body.nome.trim()) throw badRequest("Informe seu nome.");
-  if (typeof body.cpf !== "string" || !body.cpf.trim()) throw badRequest("Informe seu CPF.");
-  if (body.confirmarSenha !== undefined && body.confirmarSenha !== senha) {
-    throw badRequest("A confirmação da senha não confere.");
-  }
-  if (await usuarioRepository.findByEmail(email)) throw conflict("Já existe uma conta com esse e-mail.");
-
-  const cpf = body.cpf.trim();
-  const usuarioExistente = await prisma.usuario.findUnique({ where: { cpf } });
-  if (usuarioExistente) throw conflict("Já existe uma conta com esse CPF.");
-
-  const criado = await criarUsuario({ nome: body.nome, email, senha, cpf, role: Role.CLIENTE });
-  return novaSessao(publico(criado));
+  const b = v.objeto(entrada);
+  v.permitirCampos(b, ['nome', 'email', 'cpf', 'telefone', 'senha', 'confirmarSenha', 'endereco']);
+  const senha = v.senha(b.senha);
+  if (b.confirmarSenha !== undefined && b.confirmarSenha !== senha) throw badRequest('A confirmação da senha não confere.');
+  const user = await criarCliente({ nome: texto(b.nome, 'nome'), email: v.email(b.email), cpf: v.cpf(b.cpf), telefone: v.telefone(b.telefone), senha, endereco: v.endereco(b.endereco) });
+  return novaSessao(publico(user));
 };
-
 export const entrar = async (entrada: unknown) => {
-  if (typeof entrada !== "object" || entrada === null || Array.isArray(entrada)) {
-    throw badRequest("O corpo da requisição deve ser um objeto JSON.");
-  }
-  const body = entrada as Record<string, unknown>;
-  const email = validarEmail(body.email);
-  if (typeof body.senha !== "string" || !body.senha) throw badRequest("Informe sua senha.");
-  const usuario = await prisma.usuario.findUnique({
-    where: { email },
-    include: { enderecos: true },
-  });
-  if (!usuario || !(await verificarSenha(body.senha, usuario.senhaHash))) {
-    throw unauthorized("E-mail ou senha inválidos.");
-  }
-  return novaSessao(publico(usuario));
+  const b = v.objeto(entrada);
+  const user = await prisma.usuario.findUnique({ where: { email: v.email(b.email) }, select: { ...usuarioSelect, senhaHash: true } });
+  if (!user || typeof b.senha !== 'string' || !await verificarSenha(b.senha, user.senhaHash)) throw unauthorized('E-mail ou senha inválidos.');
+  const { senhaHash: _hash, ...dados } = user;
+  return novaSessao(publico(dados));
 };
-
+type GoogleIdentidade = { nome: string; email: string };
 export const entrarComGoogle = async (entrada: unknown) => {
-  if (typeof entrada !== "object" || entrada === null || Array.isArray(entrada)) {
-    throw badRequest("O corpo da requisição deve ser um objeto JSON.");
-  }
-
-  const body = entrada as Record<string, unknown>;
-  if (typeof body.idToken !== "string" || !body.idToken) {
-    throw badRequest("O token do Google é obrigatório.");
-  }
-
+  const b = v.objeto(entrada);
+  if (typeof b.idToken !== 'string' || !b.idToken) throw badRequest('O token do Google é obrigatório.');
   let identidade: Awaited<ReturnType<typeof verificarTokenFirebase>>;
-  try {
-    identidade = await verificarTokenFirebase(body.idToken);
-  } catch {
-    throw unauthorized("Não foi possível validar sua conta Google. Tente novamente.");
-  }
-
-  if (identidade.email_verified !== true || typeof identidade.email !== "string") {
-    throw unauthorized("A conta Google precisa ter um e-mail verificado.");
-  }
-
-  const email = validarEmail(identidade.email);
-  const existente = await prisma.usuario.findUnique({
-    where: { email },
-    include: { enderecos: true },
-  });
-  if (existente) return novaSessao({ ...publico(existente), fotoURL: identidade.picture ?? null });
-
-  if (typeof body.cpf !== "string" || !body.cpf.trim()) {
-    return { requiresCpf: true as const };
-  }
-
-  const cpf = body.cpf.trim();
-  if (await prisma.usuario.findUnique({ where: { cpf } })) {
-    throw conflict("Já existe uma conta com esse CPF.");
-  }
-
-  const nome = typeof identidade.name === "string" && identidade.name.trim()
-    ? identidade.name.trim()
-    : email.split("@")[0];
-  const senhaAleatoria = randomBytes(48).toString("base64url");
-  const criado = await criarUsuario({ nome, email, cpf, senha: senhaAleatoria, role: Role.CLIENTE });
-  return novaSessao({ ...publico(criado), fotoURL: identidade.picture ?? null });
+  try { identidade = await verificarTokenFirebase(b.idToken); } catch { throw unauthorized('Não foi possível validar sua conta Google.'); }
+  if (!identidade.email_verified || !identidade.email) throw unauthorized('A conta Google precisa ter e-mail verificado.');
+  const email = v.email(identidade.email);
+  const user = await prisma.usuario.findUnique({ where: { email }, select: usuarioSelect });
+  if (user) return novaSessao(publico(user));
+  const token = randomBytes(32).toString('base64url');
+  const dados = { email, nome: identidade.name?.trim() || email.split('@')[0] };
+  await redis.set(`onboarding:${token}`, JSON.stringify(dados), { EX: DURACAO_ONBOARDING });
+  return { requiresOnboarding: true as const, token, camposPendentes: ['cpf', 'telefone', 'endereco'] };
 };
-
-export const consultarSessao = async (token: string | undefined) => {
+export const consultarOnboarding = async (token?: string): Promise<GoogleIdentidade> => {
+  const value = token ? await redis.get(`onboarding:${token}`) : null;
+  if (!value) throw unauthorized('Cadastro Google expirado. Entre com Google novamente.');
+  try { const b = v.objeto(JSON.parse(value)); return { nome: texto(b.nome, 'nome'), email: v.email(b.email) }; } catch { throw unauthorized('Cadastro Google inválido.'); }
+};
+export const concluirOnboarding = async (token: string | undefined, entrada: unknown) => {
+  const identidade = await consultarOnboarding(token);
+  const b = v.objeto(entrada);
+  v.permitirCampos(b, ['cpf', 'telefone', 'endereco']);
+  const user = await criarCliente({ ...identidade, cpf: v.cpf(b.cpf), telefone: v.telefone(b.telefone), endereco: v.endereco(b.endereco), senha: randomBytes(48).toString('base64url') });
+  const result = await novaSessao(publico(user));
+  await redis.del(`onboarding:${token}`);
+  return result;
+};
+export const consultarSessao = async (token?: string) => {
   if (!token) return null;
-  const valor = await redis.get(`sessao:${token}`);
-  if (!valor) return null;
-  const usuario = JSON.parse(valor) as UsuarioPublico;
-  const atual = await prisma.usuario.findUnique({
-    where: { id: usuario.id },
-    include: { enderecos: true },
+  const value = await redis.get(`sessao:${token}`);
+  if (!value) return null;
+  let id: number;
+  try { id = idReferencia(v.objeto(JSON.parse(value)).id, 'id'); } catch { await redis.del(`sessao:${token}`); return null; }
+  const user = await prisma.usuario.findUnique({ where: { id }, select: usuarioSelect });
+  if (!user) { await redis.del(`sessao:${token}`); return null; }
+  return publico(user);
+};
+export const atualizarPerfil = async (id: number, entrada: unknown) => {
+  const b = v.objeto(entrada);
+  v.permitirCampos(b, ['nome', 'email', 'cpf', 'telefone', 'endereco']);
+  if (!Object.keys(b).length) throw badRequest('Informe dados para atualizar.');
+  return prisma.$transaction(async tx => {
+    // Serializa alterações de endereço/perfil da mesma conta.
+    await tx.$queryRaw`SELECT id FROM usuarios WHERE id = ${id} FOR UPDATE`;
+    const atual = await tx.usuario.findUniqueOrThrow({ where: { id }, select: usuarioSelect });
+    const data: Prisma.UsuarioUpdateInput = {};
+    if (b.nome !== undefined) data.nome = texto(b.nome, 'nome');
+    if (b.email !== undefined) data.email = v.email(b.email);
+    if (b.telefone !== undefined) data.telefone = v.telefone(b.telefone);
+    if (b.cpf !== undefined) {
+      if (v.valido(v.cpf, atual.cpf) && v.cpf(b.cpf) !== v.cpf(atual.cpf)) throw badRequest('CPF válido não pode ser alterado pelo cliente.');
+      data.cpf = v.cpf(b.cpf);
+    }
+    if (b.endereco !== undefined) {
+      const address = v.endereco(b.endereco);
+      const addressId = v.objeto(b.endereco).id;
+      if (addressId !== undefined) {
+        const eid = idReferencia(addressId, 'endereco.id');
+        const owned = await tx.endereco.findFirst({ where: { id: eid, usuarioId: id } });
+        if (!owned) throw forbidden('Endereço não pertence à conta.');
+        await tx.endereco.update({ where: { id: eid, usuarioId: id }, data: address });
+      } else await tx.endereco.create({ data: { ...address, usuarioId: id } });
+    }
+    const atualizado = await tx.usuario.update({ where: { id }, data, select: usuarioSelect });
+    if (v.perfilCompleto(atual) && !v.perfilCompleto(atualizado)) throw badRequest('A atualização deve manter o perfil completo.');
+    return publico(atualizado);
   });
-  if (!atual) {
-    await redis.del(`sessao:${token}`);
-    return null;
-  }
-  return { ...publico(atual), fotoURL: usuario.fotoURL ?? null };
 };
-
-export const sair = async (token: string | undefined) => {
-  if (token) {
-    await redis.del(`sessao:${token}`);
-  }
-};
+export const sair = async (token?: string) => { if (token) await redis.del(`sessao:${token}`); };

@@ -1,3 +1,5 @@
+import { Contexto, autorizar, escopo, dono } from "../lib/authorization";
+import { forbidden } from "../lib/errors";
 import { badRequest, existeOu404 } from "../lib/errors";
 import {
   dataHora,
@@ -32,7 +34,7 @@ type Vinculos = {
 
 const NAO_ENCONTRADO = "Agendamento não encontrado.";
 
-const validar = async (agendamento: Vinculos) => {
+const validar = async (agendamento: Vinculos, ctx?: Contexto) => {
   if (agendamento.dataHoraFim <= agendamento.dataHoraIni) {
     throw badRequest("dataHoraFim deve ser posterior a dataHoraIni.");
   }
@@ -47,30 +49,40 @@ const validar = async (agendamento: Vinculos) => {
     ),
   ]);
 
+  if (ctx?.role === "CLIENTE" && animal.usuarioId !== ctx.id) throw forbidden("Animal não pertence à conta.");
   if (animal.usuarioId !== agendamento.usuarioId) {
     throw badRequest("O animal informado não pertence ao usuário do agendamento.");
   }
 };
 
-export const list = () => agendamentoRepository.findAll();
+export const list = (ctx?: Contexto) => agendamentoRepository.findAll(escopo("agendamento", ctx));
 
-export const getById = (id: number) =>
-  existeOu404(agendamentoRepository.findById(id), NAO_ENCONTRADO);
+export const getById = async (id: number, ctx?: Contexto) => {
+  const scoped = await agendamentoRepository.findById(id, escopo("agendamento", ctx));
+  if (scoped) return scoped;
+  await existeOu404(agendamentoRepository.findById(id), NAO_ENCONTRADO);
+  throw forbidden();
+};
 
-export const create = async (body: unknown) => {
+export const create = async (body: unknown, ctx?: Contexto) => {
+  autorizar("agendamento", false, ctx);
+  body = dono(body, ctx);
   const dados = parseCriacao(campos, body);
-  await validar(dados);
+  await validar(dados, ctx);
   return agendamentoRepository.create(dados);
 };
 
-export const update = async (id: number, body: unknown) => {
+export const update = async (id: number, body: unknown, ctx?: Contexto) => {
+  autorizar("agendamento", false, ctx);
+  body = dono(body, ctx);
   const dados = parseAtualizacao(campos, body);
-  const atual = await getById(id);
-  await validar({ ...atual, ...dados });
-  return agendamentoRepository.update(id, dados);
+  const atual = await getById(id, ctx);
+  await validar({ ...atual, ...dados }, ctx);
+  return agendamentoRepository.update(id, dados, escopo("agendamento", ctx));
 };
 
-export const remove = async (id: number) => {
-  await getById(id);
-  await agendamentoRepository.remove(id);
+export const remove = async (id: number, ctx?: Contexto) => {
+  autorizar("agendamento", false, ctx);
+  await getById(id, ctx);
+  await agendamentoRepository.remove(id, escopo("agendamento", ctx));
 };

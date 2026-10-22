@@ -3,8 +3,9 @@ import { Prisma } from "@prisma/client";
 
 export class HttpError extends Error {
   constructor(
-    public readonly status: 400 | 401 | 404 | 409,
+    public readonly status: 400 | 401 | 403 | 404 | 409,
     message: string,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "HttpError";
@@ -13,6 +14,7 @@ export class HttpError extends Error {
 
 export const badRequest = (message: string) => new HttpError(400, message);
 export const unauthorized = (message: string) => new HttpError(401, message);
+export const forbidden = (message = "Acesso não permitido.", code?: string) => new HttpError(403, message, code);
 export const notFound = (message: string) => new HttpError(404, message);
 export const conflict = (message: string) => new HttpError(409, message);
 
@@ -37,7 +39,7 @@ export const errorMiddleware = (
   _next: NextFunction,
 ) => {
   if (error instanceof HttpError) {
-    return res.status(error.status).json({ message: error.message });
+    return res.status(error.status).json({ message: error.message, ...(error.code ? { code: error.code } : {}) });
   }
 
   if (error instanceof SyntaxError && "body" in error) {

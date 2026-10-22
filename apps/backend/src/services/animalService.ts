@@ -1,3 +1,5 @@
+import { Contexto, autorizar, escopo, dono } from "../lib/authorization";
+import { forbidden } from "../lib/errors";
 import { Porte } from "@prisma/client";
 import { conflict, existeOu404 } from "../lib/errors";
 import {
@@ -26,19 +28,28 @@ const NAO_ENCONTRADO = "Animal não encontrado.";
 const garantirUsuario = (usuarioId: number) =>
   existeOu404(usuarioRepository.findById(usuarioId), "Usuário não encontrado.");
 
-export const list = () => animalRepository.findAll();
+export const list = (ctx?: Contexto) => animalRepository.findAll(escopo("animal", ctx));
 
-export const getById = (id: number) => existeOu404(animalRepository.findById(id), NAO_ENCONTRADO);
+export const getById = async (id: number, ctx?: Contexto) => {
+  const scoped = await animalRepository.findById(id, escopo("animal", ctx));
+  if (scoped) return scoped;
+  await existeOu404(animalRepository.findById(id), NAO_ENCONTRADO);
+  throw forbidden();
+};
 
-export const create = async (body: unknown) => {
+export const create = async (body: unknown, ctx?: Contexto) => {
+  autorizar("animal", false, ctx);
+  body = dono(body, ctx);
   const dados = parseCriacao(campos, body);
   await garantirUsuario(dados.usuarioId);
   return animalRepository.create(dados);
 };
 
-export const update = async (id: number, body: unknown) => {
+export const update = async (id: number, body: unknown, ctx?: Contexto) => {
+  autorizar("animal", false, ctx);
+  body = dono(body, ctx);
   const dados = parseAtualizacao(campos, body);
-  const atual = await getById(id);
+  const atual = await getById(id, ctx);
 
   if (dados.usuarioId !== undefined && dados.usuarioId !== atual.usuarioId) {
     await garantirUsuario(dados.usuarioId);
@@ -47,13 +58,14 @@ export const update = async (id: number, body: unknown) => {
     }
   }
 
-  return animalRepository.update(id, dados);
+  return animalRepository.update(id, dados, escopo("animal", ctx));
 };
 
-export const remove = async (id: number) => {
-  await getById(id);
+export const remove = async (id: number, ctx?: Contexto) => {
+  autorizar("animal", false, ctx);
+  await getById(id, ctx);
   if ((await agendamentoRepository.countByAnimal(id)) > 0) {
     throw conflict("Animal com agendamentos vinculados não pode ser removido.");
   }
-  await animalRepository.remove(id);
+  await animalRepository.remove(id, escopo("animal", ctx));
 };
