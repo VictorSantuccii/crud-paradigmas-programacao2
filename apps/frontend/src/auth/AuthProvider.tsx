@@ -1,42 +1,35 @@
-import { AuthContext } from "@/auth/auth-context";
-import type { Usuario } from "@/auth/types";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { AuthContext } from '@/auth/auth-context';
+import type { Usuario } from '@/auth/types';
+import { api, ApiError, mensagemErro } from '@/lib/api';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState(true);
-
+  const [erroSessao, setErroSessao] = useState('');
+  const versao = useRef(0);
+  const recarregarUsuario = useCallback(async (signal?: AbortSignal) => {
+    const atual = ++versao.current;
+    try {
+      const payload = await api<{ usuario: Usuario }>('/auth/me', { signal });
+      if (!signal?.aborted && atual === versao.current) { setUsuario(payload.usuario); setErroSessao(''); }
+      return payload.usuario;
+    } catch (error) {
+      if (signal?.aborted || atual !== versao.current) throw error;
+      if (error instanceof ApiError && error.status === 401) {
+        setUsuario(null); setErroSessao(''); return null;
+      }
+      setErroSessao(mensagemErro(error)); throw error;
+    }
+  }, []);
   useEffect(() => {
-    let ativo = true;
-
-    fetch(`${apiUrl}/auth/me`, { credentials: "include" })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        const payload = (await response.json()) as { usuario: Usuario };
-        return payload.usuario;
-      })
-      .then((usuarioAtual) => {
-        if (ativo) setUsuario(usuarioAtual);
-      })
-      .catch(() => {
-        if (ativo) setUsuario(null);
-      })
-      .finally(() => {
-        if (ativo) setCarregando(false);
-      });
-
-    return () => {
-      ativo = false;
-    };
+    const controller = new AbortController();
+    void recarregarUsuario(controller.signal).catch(() => undefined).finally(() => { if (!controller.signal.aborted) setCarregando(false); });
+    return () => controller.abort();
+  }, [recarregarUsuario]);
+  const atualizarUsuario = useCallback((atual: Usuario | null) => {
+    ++versao.current; setUsuario(atual); setErroSessao('');
   }, []);
-
-  const atualizarUsuario = useCallback((usuarioAtual: Usuario | null) => {
-    setUsuario(usuarioAtual);
-  }, []);
-  const valor = useMemo(() => ({ usuario, carregando, atualizarUsuario }), [usuario, carregando, atualizarUsuario]);
-
+  const valor = useMemo(() => ({ usuario, carregando, erroSessao, atualizarUsuario, recarregarUsuario }), [usuario, carregando, erroSessao, atualizarUsuario, recarregarUsuario]);
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }

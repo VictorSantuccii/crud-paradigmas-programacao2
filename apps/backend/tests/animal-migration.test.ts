@@ -1,0 +1,22 @@
+import { afterAll, expect, it } from 'vitest';
+import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'node:fs';
+const url = new URL(process.env.DATABASE_URL!);
+if (!url.pathname.includes('petshop_test')) throw new Error('Use banco isolado.');
+url.searchParams.set('schema', 'phase2_migration_test');
+const db = new PrismaClient({ datasources: { db: { url: url.toString() } } });
+afterAll(async () => { await db.$executeRawUnsafe('DROP SCHEMA IF EXISTS phase2_migration_test CASCADE'); await db.$disconnect(); });
+it('adiciona raça nula sem alterar animais preexistentes ou vínculos', async () => {
+  await db.$executeRawUnsafe('CREATE SCHEMA phase2_migration_test');
+  const base = readFileSync('prisma/migrations/20260927231723_dominio_petshop/migration.sql', 'utf8');
+  for (const sql of base.split(';')) if (sql.trim()) await db.$executeRawUnsafe(sql);
+  await db.$executeRawUnsafe(`INSERT INTO fidelidades (id, "beneficioAtivo", "qntdServicos") VALUES (1, false, 0)`);
+  await db.$executeRawUnsafe(`INSERT INTO usuarios (id, nome, cpf, senha_hash, role, id_fidelidade) VALUES (1, 'Tutor', '52998224725', 'hash', 'CLIENTE', 1)`);
+  await db.$executeRawUnsafe(`INSERT INTO animais (id, idade, porte, especie, nome, id_usuario) VALUES (7, 3, 'MEDIO', 'Cão', 'Lua', 1)`);
+  await db.$executeRawUnsafe(`INSERT INTO funcionarios (id, nome, cargo) VALUES (1, 'Vet', 'Vet')`);
+  await db.$executeRawUnsafe(`INSERT INTO servicos (id, nome, preco, "duracaoMin") VALUES (1, 'Consulta', 50, 30)`);
+  await db.$executeRawUnsafe(`INSERT INTO agendamentos (id, "dataHoraIni", "dataHoraFim", id_usuario, id_animal, id_servico, id_funcionario) VALUES (9, '2026-12-01T10:00:00Z', '2026-12-01T11:00:00Z', 1, 7, 1, 1)`);
+  const migration = readFileSync('prisma/migrations/20261022010000_animal_raca/migration.sql', 'utf8');
+  await db.$executeRawUnsafe(migration);
+  expect(await db.animal.findUnique({ where: { id: 7 }, include: { agendamentos: true } })).toMatchObject({ id: 7, nome: 'Lua', usuarioId: 1, idade: 3, raca: null, agendamentos: [{ id: 9, animalId: 7, usuarioId: 1 }] });
+});

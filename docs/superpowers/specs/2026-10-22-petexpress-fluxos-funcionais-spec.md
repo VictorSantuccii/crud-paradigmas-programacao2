@@ -24,6 +24,8 @@ O escopo principal inclui cadastro e perfil do cliente, gestão de pets, agendam
 4. Manter a arquitetura existente de React/Vite e API Express em camadas (rota, controller, service, repository, Prisma). Toda evolução de modelo deve ter migration Prisma.
 5. Datas de agendamento são armazenadas em UTC e exibidas no fuso `America/Sao_Paulo`. A API valida ISO 8601 com offset; horários passados ou fora do expediente são indisponíveis.
 6. Um atendimento só conta para fidelidade depois de marcado como concluído. Cancelado não conta. Benefício é consumido uma vez no próximo serviço elegível confirmado.
+7. **Preservação de interface em todo o projeto:** implementar funcionalidades nas telas existentes sem redesenhar, reorganizar, simplificar, modernizar ou reinterpretar sua apresentação. Para telas com protótipo em `apps/frontend-html`, portar fielmente estrutura, composição, proporções, cores, tipografia, espaçamento, ícones e comportamento responsivo desse HTML. Para telas sem protótipo HTML, preservar a versão React existente e seus padrões visuais. Esta regra vale para todas as fases, rotas e papéis do sistema.
+8. Alterações visuais devem se limitar a conectar controles existentes a dados e operações reais e a apresentar estados necessários de carregamento, vazio, erro e sucesso. Substituir conteúdo fictício por dados reais sem mudar a composição. Remover apenas demonstrações sem suporte de API/modelo, sem inventar cartões, resumos, seções ou fluxos substitutos. Ajustes de acessibilidade e responsividade devem preservar o desenho e a hierarquia existentes. Criar uma nova apresentação só mediante solicitação explícita do usuário.
 
 ## Fases de implementação
 
@@ -50,17 +52,21 @@ O escopo principal inclui cadastro e perfil do cliente, gestão de pets, agendam
 
 **Objetivo:** tornar `/cadastro`, `/cadastro/google/cpf`, `/meu-perfil` e `/meus-pets` fontes reais de dados.
 
+**Referências desta fase:** `/meu-perfil` e `/meus-pets` usam `apps/frontend-html/perfil-substitui a meus pets.html`; cadastro e onboarding Google preservam suas telas React existentes. Aplicam-se os princípios globais de preservação de interface acima.
+
 **Entregas**
 - Completar cadastro com telefone/WhatsApp e endereço (CEP, rua, número, bairro e complemento opcional), validando obrigatórios e apresentando erros de campo e duplicidade.
 - Carregar perfil próprio da API; implementar edição de nome, e-mail sujeito à unicidade, telefone e endereços; preservar CPF como dado de identificação e exigir processo administrativo para correção, se necessário.
 - Implementar listagem, criação, edição e remoção de pets usando endpoints autenticados. Toda operação deriva o dono da sessão, sem confiar em `usuarioId` enviado pelo cliente.
 - Acrescentar raça ao animal, se mantida no formulário/tela como dado esperado. O modelo atual também não comporta foto, sexo, peso, vacinação ou histórico clínico; não os exibir como persistidos sem decisão e modelo próprio.
 - Remover ações visuais sem efeito e dados falsos de pets, histórico, telefone, endereço e preferências. Exibir estados vazios, carregamento, falha de rede e sucesso.
+- Implementar essas funções dentro das telas e da referência visual existente. Conferir a versão React lado a lado com o HTML nos mesmos tamanhos de tela antes de concluir.
 
 **Critérios de aceite**
 - Cadastro e onboarding concluem com os dados obrigatórios e criam perfil/endereço de forma consistente.
 - Após atualizar perfil ou pet, recarregar a tela preserva os dados. Tentativas de acessar ID de outro cliente são negadas.
 - Remoção de pet com agendamento segue regra explícita: bloquear com conflito e explicar que há agendamento associado.
+- A versão React de `/meu-perfil` e `/meus-pets` preserva a estrutura e a aparência do HTML de referência, sem cartões estreitos, texto quebrado ou mudança de proporções entre colunas. As telas de cadastro e onboarding mantêm o design existente.
 
 ### Fase 3 — Catálogo, disponibilidade e agendamento
 
@@ -125,12 +131,14 @@ O escopo principal inclui cadastro e perfil do cliente, gestão de pets, agendam
 - Revisar home e navegação: CTA de serviço leva a `/servicos`, consulta leva a `/consultas`, perfil exige sessão; remover links `#` e promessas sem funcionalidade (loja/app/notificações) ou ligá-las a destinos implementados.
 - Padronizar formatos monetários, telefone, CPF, datas e mensagens de erro. Tratar `401` globalmente com atualização da sessão e retorno ao login preservando destino; tratar `403`, `404`, `409` e falhas de rede com mensagem contextual.
 - Rever acessibilidade de formulários, navegação por teclado, rótulos, foco após erro, confirmação de exclusão e layouts mobile presentes nos protótipos.
+- Conferir visualmente todas as telas alteradas contra suas referências originais nos mesmos tamanhos de tela; corrigir qualquer mudança não solicitada de composição, proporções, tipografia, cores, espaçamento ou hierarquia.
 - Atualizar Swagger, README, exemplos de configuração e instruções de execução com as novas rotas, papéis, estados e regras.
 - Fazer verificação manual ponta a ponta: cadastro → login → perfil/pet → agendamento → mudança de estado → fidelidade → visão de funcionário/admin. Cobrir também autorização cruzada e conflito concorrente conforme infraestrutura disponível.
 
 **Critérios de aceite**
 - Nenhuma ação apresentada como funcional é apenas local ou usa lista de demonstração.
 - Os fluxos essenciais persistem após recarregar e mantêm regras iguais entre UI e API.
+- Todas as telas existentes mantêm fidelidade às suas referências visuais; mudanças de interface se limitam à integração funcional, estados necessários e remoção de demonstrações sem suporte.
 - Documentação e Swagger descrevem o comportamento entregue, incluindo códigos de erro e permissões.
 
 ## Dependências e ordem

@@ -34,3 +34,13 @@ pnpm --filter @petshop/backend auditoria:legado enumera incompletudes e colisõe
 ## Testes
 
 pnpm --filter @petshop/backend test usa PostgreSQL e Redis indicados por TEST_DATABASE_URL/TEST_REDIS_URL (padrão portas 25432/26379). O teste exige database petshop_test e Redis DB 15. Exemplo: docker compose -p petshop-phase1-test -f .phase1-test-compose.yml up -d.
+
+## Fluxos de cadastro, perfil, endereços e pets (fase 2)
+
+`POST /auth/cadastro`, `GET/PUT /auth/me` e o onboarding Google compartilham o perfil obrigatório com telefone e ao menos um endereço completo. O corpo dos erros mantém `message` e pode incluir `fieldErrors`, por exemplo `endereco.cep`; colisões de e-mail e CPF normalizados, inclusive quando detectadas pelo índice único durante uma concorrência, retornam `409` e identificam o campo. CPF já válido é somente leitura para o cliente e correções exigem atendimento administrativo.
+
+`GET/POST /enderecos` e `GET/PUT/DELETE /enderecos/{id}` permitem gerenciar os endereços próprios. O número aceita zero para indicar ausência de número; complemento é opcional. A remoção ou transferência do último endereço completo retorna `409` e preserva o registro.
+
+`GET/POST /animais` e `GET/PUT/DELETE /animais/{id}` permitem consultar e manter os pets do cliente autenticado. O backend deriva o titular da sessão; clientes não enviam `usuarioId`. Nome, espécie e idade inteira a partir de zero são obrigatórios; porte aceita `PEQUENO`, `MEDIO` ou `GRANDE`. `raca` é opcional: texto é aparado, `null` limpa e a omissão durante a atualização preserva o valor. A migração adiciona a coluna anulável sem preencher raças nos pets existentes. Pets com agendamentos não podem ser removidos; o serviço traduz o conflito da referência na exclusão efetiva para `409` e preserva o pet.
+
+IDs inexistentes retornam `404`; registros de outro cliente retornam `403`. Endereços e animais em operações privadas continuam sujeitos ao perfil completo e à sessão autenticada. Consulte `/api-docs` para os esquemas e respostas de erro atualizados.

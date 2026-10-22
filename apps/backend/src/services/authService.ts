@@ -27,7 +27,7 @@ export const cadastrar = async (entrada: unknown) => {
   const b = v.objeto(entrada);
   v.permitirCampos(b, ['nome', 'email', 'cpf', 'telefone', 'senha', 'confirmarSenha', 'endereco']);
   const senha = v.senha(b.senha);
-  if (b.confirmarSenha !== undefined && b.confirmarSenha !== senha) throw badRequest('A confirmação da senha não confere.');
+  if (b.confirmarSenha !== undefined && b.confirmarSenha !== senha) throw badRequest('A confirmação da senha não confere.', 'confirmarSenha');
   const user = await criarCliente({ nome: texto(b.nome, 'nome'), email: v.email(b.email), cpf: v.cpf(b.cpf), telefone: v.telefone(b.telefone), senha, endereco: v.endereco(b.endereco) });
   return novaSessao(publico(user));
 };
@@ -90,7 +90,7 @@ export const atualizarPerfil = async (id: number, entrada: unknown) => {
     if (b.email !== undefined) data.email = v.email(b.email);
     if (b.telefone !== undefined) data.telefone = v.telefone(b.telefone);
     if (b.cpf !== undefined) {
-      if (v.valido(v.cpf, atual.cpf) && v.cpf(b.cpf) !== v.cpf(atual.cpf)) throw badRequest('CPF válido não pode ser alterado pelo cliente.');
+      if (v.valido(v.cpf, atual.cpf) && v.cpf(b.cpf) !== v.cpf(atual.cpf)) throw badRequest('CPF válido não pode ser alterado pelo cliente.', 'cpf');
       data.cpf = v.cpf(b.cpf);
     }
     if (b.endereco !== undefined) {

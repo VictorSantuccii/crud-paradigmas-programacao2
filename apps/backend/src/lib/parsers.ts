@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { badRequest } from "./errors";
+import { badRequest, HttpError } from "./errors";
 
 type Parser<T> = (valor: unknown, campo: string) => T;
 
@@ -18,7 +18,7 @@ export type DadosAtualizacao<S extends Schema> = Partial<DadosCriacao<S>>;
 
 export const texto: Parser<string> = (valor, campo) => {
   if (typeof valor !== "string" || valor.trim() === "") {
-    throw badRequest(`O campo ${campo} deve ser um texto não vazio.`);
+    throw badRequest(`O campo ${campo} deve ser um texto não vazio.`, campo);
   }
   return valor.trim();
 };
@@ -35,7 +35,7 @@ export const inteiro =
       valor > INT_MAX
     ) {
       throw badRequest(
-        `O campo ${campo} deve ser um inteiro entre ${minimo} e ${INT_MAX}.`,
+        `O campo ${campo} deve ser um inteiro entre ${minimo} e ${INT_MAX}.`, campo,
       );
     }
     return valor;
@@ -130,15 +130,18 @@ export const parseCriacao = <S extends Schema>(schema: S, body: unknown): DadosC
     const valor = entrada[campo];
     if (valor === undefined) {
       if (regra.obrigatorio) {
-        throw badRequest(`O campo ${campo} é obrigatório.`);
+        throw badRequest(`O campo ${campo} é obrigatório.`, campo);
       }
       saida[campo] = null;
       continue;
     }
     if (valor === null && regra.obrigatorio) {
-      throw badRequest(`O campo ${campo} é obrigatório.`);
+      throw badRequest(`O campo ${campo} é obrigatório.`, campo);
     }
-    saida[campo] = regra.parse(valor, campo);
+    try { saida[campo] = regra.parse(valor, campo); } catch (error) {
+      if (error instanceof HttpError && !error.fieldErrors) throw badRequest(error.message, campo);
+      throw error;
+    }
   }
 
   return saida as DadosCriacao<S>;
@@ -155,9 +158,12 @@ export const parseAtualizacao = <S extends Schema>(
     if (!(campo in entrada) || entrada[campo] === undefined) continue;
     const valor = entrada[campo];
     if (valor === null && regra.obrigatorio) {
-      throw badRequest(`O campo ${campo} não pode ser nulo.`);
+      throw badRequest(`O campo ${campo} não pode ser nulo.`, campo);
     }
-    saida[campo] = regra.parse(valor, campo);
+    try { saida[campo] = regra.parse(valor, campo); } catch (error) {
+      if (error instanceof HttpError && !error.fieldErrors) throw badRequest(error.message, campo);
+      throw error;
+    }
   }
 
   if (Object.keys(saida).length === 0) {
