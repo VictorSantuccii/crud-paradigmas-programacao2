@@ -6,13 +6,14 @@ export class HttpError extends Error {
     public readonly status: 400 | 401 | 403 | 404 | 409,
     message: string,
     public readonly code?: string,
+    public readonly fieldErrors?: Record<string, string>,
   ) {
     super(message);
     this.name = "HttpError";
   }
 }
 
-export const badRequest = (message: string) => new HttpError(400, message);
+export const badRequest = (message: string, field?: string) => new HttpError(400, message, undefined, field ? { [field]: message } : undefined);
 export const unauthorized = (message: string) => new HttpError(401, message);
 export const forbidden = (message = "Acesso não permitido.", code?: string) => new HttpError(403, message, code);
 export const notFound = (message: string) => new HttpError(404, message);
@@ -34,12 +35,12 @@ const prismaStatus: Record<string, { status: number; message: string }> = {
 
 export const errorMiddleware = (
   error: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
   if (error instanceof HttpError) {
-    return res.status(error.status).json({ message: error.message, ...(error.code ? { code: error.code } : {}) });
+    return res.status(error.status).json({ message: error.message, ...(error.code ? { code: error.code } : {}), ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}) });
   }
 
   if (error instanceof SyntaxError && "body" in error) {
@@ -47,6 +48,15 @@ export const errorMiddleware = (
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002' && req.path.startsWith('/auth/')) {
+      const target = error.meta?.target;
+      const fields = Array.isArray(target) ? target : [];
+      const field = ['email', 'cpf'].find(key => fields.includes(key));
+      if (field) {
+        const message = `${field === 'cpf' ? 'CPF' : 'E-mail'} já cadastrado.`;
+        return res.status(409).json({ message, fieldErrors: { [field]: message } });
+      }
+    }
     const mapped = prismaStatus[error.code];
     if (mapped) {
       return res.status(mapped.status).json({ message: mapped.message });

@@ -72,6 +72,7 @@ model Animal {
   idade        Int
   porte        Porte
   especie      String
+  raca         String?
   nome         String
   usuarioId    Int           @map("id_usuario")
   usuario      Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)

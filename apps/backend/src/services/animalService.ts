@@ -1,12 +1,13 @@
 import { Contexto, autorizar, escopo, dono } from "../lib/authorization";
 import { forbidden } from "../lib/errors";
-import { Porte } from "@prisma/client";
+import { Porte, Prisma } from "@prisma/client";
 import { conflict, existeOu404 } from "../lib/errors";
 import {
   enumeracao,
   idReferencia,
   inteiro,
   obrigatorio,
+  opcional,
   parseAtualizacao,
   parseCriacao,
   texto,
@@ -20,6 +21,7 @@ const campos = {
   porte: obrigatorio(enumeracao(Porte)),
   especie: obrigatorio(texto),
   nome: obrigatorio(texto),
+  raca: opcional(texto),
   usuarioId: obrigatorio(idReferencia),
 };
 
@@ -67,5 +69,12 @@ export const remove = async (id: number, ctx?: Contexto) => {
   if ((await agendamentoRepository.countByAnimal(id)) > 0) {
     throw conflict("Animal com agendamentos vinculados não pode ser removido.");
   }
-  await animalRepository.remove(id, escopo("animal", ctx));
+  try {
+    await animalRepository.remove(id, escopo("animal", ctx));
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      throw conflict("Animal com agendamentos vinculados não pode ser removido.");
+    }
+    throw error;
+  }
 };

@@ -1,17 +1,21 @@
 import type { Usuario } from '@/auth/types';
-const inputClass = 'w-full rounded-lg bg-surface-container-lowest px-3.5 py-3 text-on-surface shadow-sm ring-1 ring-outline-variant outline-none focus:ring-2 focus:ring-primary';
-export function ProfileFields({ usuario, incluirCpf = false }: { usuario?: Usuario | null; incluirCpf?: boolean }) {
-  const address = usuario?.enderecos[0];
-  return <fieldset className="space-y-3.5">
-    <legend className="mb-3 font-label-md text-on-surface">Dados de contato e endereço</legend>
-    {incluirCpf && <div><label htmlFor="perfil-cpf" className="mb-1 block font-label-md">CPF</label><input className={inputClass} id="perfil-cpf" name="cpf" required inputMode="numeric" defaultValue={usuario?.cpf} placeholder="000.000.000-00" /></div>}
-    <div><label htmlFor="telefone" className="mb-1 block font-label-md">Telefone com DDD</label><input className={inputClass} id="telefone" name="telefone" type="tel" autoComplete="tel-national" required defaultValue={usuario?.telefone || ''} placeholder="(11) 99999-1234" /></div>
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div><label htmlFor="cep" className="mb-1 block font-label-md">CEP</label><input className={inputClass} id="cep" name="cep" autoComplete="postal-code" inputMode="numeric" required defaultValue={address?.cep} placeholder="00000-000" /></div>
-      <div><label htmlFor="numero" className="mb-1 block font-label-md">Número</label><input className={inputClass} id="numero" name="numero" type="number" min={0} max={2147483647} step={1} required defaultValue={address?.numero} placeholder="0 para sem número" /></div>
+import type { FieldErrors } from '@/lib/api';
+import { Field } from '@/components/forms/Field';
+export function AddressFields({ address, errors = {}, prefix = '' }: { address?: Usuario['enderecos'][number]; errors?: FieldErrors; prefix?: string }) {
+  return <>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Field name="cep" field={`${prefix}cep`} errors={errors} label="CEP" autoComplete="postal-code" inputMode="numeric" required defaultValue={address?.cep} placeholder="00000-000" />
+      <Field name="numero" field={`${prefix}numero`} errors={errors} label="Número (0 para sem número)" type="number" min={0} max={2147483647} step={1} required defaultValue={address?.numero} />
     </div>
-    <div><label htmlFor="rua" className="mb-1 block font-label-md">Rua</label><input className={inputClass} id="rua" name="rua" autoComplete="address-line1" required defaultValue={address?.rua} /></div>
-    <div><label htmlFor="bairro" className="mb-1 block font-label-md">Bairro</label><input className={inputClass} id="bairro" name="bairro" required defaultValue={address?.bairro} /></div>
-    <div><label htmlFor="complemento" className="mb-1 block font-label-md">Complemento (opcional)</label><input className={inputClass} id="complemento" name="complemento" autoComplete="address-line2" defaultValue={address?.complemento || ''} /></div>
+    <Field name="rua" field={`${prefix}rua`} errors={errors} label="Rua" autoComplete="address-line1" required defaultValue={address?.rua} />
+    <Field name="bairro" field={`${prefix}bairro`} errors={errors} label="Bairro" required defaultValue={address?.bairro} />
+    <Field name="complemento" field={`${prefix}complemento`} errors={errors} label="Complemento (opcional)" autoComplete="address-line2" defaultValue={address?.complemento || ''} />
+  </>;
+}
+export function ProfileFields({ usuario, incluirCpf = false, errors = {} }: { usuario?: Usuario | null; incluirCpf?: boolean; errors?: FieldErrors }) {
+  return <fieldset className="space-y-4"><legend className="mb-3 font-label-md text-on-surface">Dados de contato e endereço</legend>
+    {incluirCpf && <Field name="cpf" label="CPF" errors={errors} required inputMode="numeric" defaultValue={usuario?.cpf} placeholder="000.000.000-00" />}
+    <Field name="telefone" label="Telefone com DDD" errors={errors} type="tel" autoComplete="tel-national" required defaultValue={usuario?.telefone || ''} placeholder="(11) 99999-1234" />
+    <AddressFields address={usuario?.enderecos[0]} errors={errors} prefix="endereco." />
   </fieldset>;
 }

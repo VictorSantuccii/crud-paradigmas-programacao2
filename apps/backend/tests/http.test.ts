@@ -2,6 +2,7 @@ import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 vi.mock('../src/lib/firebaseAdmin', () => ({ verificarTokenFirebase: vi.fn(async () => ({ email_verified: true, email: 'google@example.com', name: 'Google Tutor' })) }));
 import app from '../src/app';
+import * as animalRepository from '../src/repositories/animalRepository';
 import prisma from '../src/lib/prisma';
 import redis, { conectarRedis } from '../src/lib/redis';
 import { hashSenha } from '../src/lib/password';
@@ -38,6 +39,8 @@ describe('HTTP identidade e autorização', () => {
   it('cadastro normaliza identidade, cria endereço/fidelidade e resolve concorrência com 409', async () => {
     const results = await Promise.all([request(app).post('/auth/cadastro').send(registration), request(app).post('/auth/cadastro').send(registration)]);
     expect(results.map(r => r.status).sort()).toEqual([201, 409]);
+    const duplicate = results.find(r => r.status === 409)!;
+    expect(['email', 'cpf']).toContain(Object.keys(duplicate.body.fieldErrors || {})[0]);
     const result = results.find(r => r.status === 201)!;
     a = cookie(result); aId = result.body.usuario.id;
     expect(result.body.usuario).toMatchObject({ email: 'ana@example.com', cpf: '52998224725', telefone: '11999991234', perfilCompleto: true });
@@ -144,5 +147,79 @@ describe('sessões inválidas e recursos ausentes', () => {
     expect(extra.status).toBe(201);
     const results = await Promise.all([request(app).delete(`/enderecos/${addressA.id}`).set('Cookie', a), request(app).delete(`/enderecos/${extra.body.id}`).set('Cookie', a)]);
     expect(results.map(r => r.status).sort()).toEqual([200, 409]);
+  });
+});
+
+
+describe('fase 2: perfil, endereços e pets persistidos', () => {
+  it('cria, consulta, edita, preserva e limpa raça e remove pet', async () => {
+    const created = await request(app).post('/animais').set('Cookie', a).send({ nome: ' Lua ', especie: ' Gato ', idade: 0, porte: 'PEQUENO', raca: ' Siamês ' });
+    expect(created.status).toBe(201);
+    const id = created.body.id;
+    expect(created.body).toMatchObject({ nome: 'Lua', especie: 'Gato', raca: 'Siamês', usuarioId: aId, idade: 0 });
+    expect((await request(app).get(`/animais/${id}`).set('Cookie', a)).body.raca).toBe('Siamês');
+    expect((await prisma.animal.findUniqueOrThrow({ where: { id: animalB } })).raca).toBe(null);
+    expect((await request(app).put(`/animais/${id}`).set('Cookie', a).send({ idade: 1, porte: 'MEDIO' })).body.raca).toBe('Siamês');
+    expect((await request(app).put(`/animais/${id}`).set('Cookie', a).send({ raca: null })).body.raca).toBe(null);
+    expect((await prisma.animal.findUniqueOrThrow({ where: { id } })).raca).toBe(null);
+    expect((await request(app).put(`/animais/${id}`).set('Cookie', a).send({ usuarioId: bId })).status).toBe(403);
+    expect((await request(app).delete(`/animais/${id}`).set('Cookie', a)).status).toBe(200);
+    expect((await request(app).get(`/animais/${id}`).set('Cookie', a)).status).toBe(404);
+  });
+  it('rejeita dados de pet inválidos com identificação do campo', async () => {
+    const valid = { nome: 'Pet', especie: 'Gato', idade: 1, porte: 'PEQUENO' };
+    for (const field of ['nome', 'especie', 'idade', 'porte']) {
+      const body: Record<string, unknown> = { ...valid }; delete body[field];
+      const res = await request(app).post('/animais').set('Cookie', a).send(body);
+      expect(res.status).toBe(400); expect(res.body.fieldErrors[field]).toBeTruthy();
+    }
+    for (const [field, value] of [['nome', ' '], ['especie', null], ['idade', -1], ['idade', 1.5], ['idade', '2'], ['porte', 'GIGANTE'], ['raca', 10], ['raca', ' ']]) {
+      const res = await request(app).post('/animais').set('Cookie', a).send({ ...valid, [field]: value });
+      expect(res.status).toBe(400); expect(res.body.fieldErrors[field as string]).toBeTruthy();
+    }
+  });
+  it('bloqueia exclusão com agendamento inclusive se o vínculo surgir após a contagem', async () => {
+    expect((await request(app).delete(`/animais/${animalB}`).set('Cookie', b)).status).toBe(409);
+    const pet = await prisma.animal.create({ data: { nome: 'Concorrente', especie: 'Cão', idade: 1, porte: 'GRANDE', usuarioId: bId } });
+    const remove = animalRepository.remove;
+    const spy = vi.spyOn(animalRepository, 'remove').mockImplementationOnce(async (id, scope) => {
+      await prisma.agendamento.create({ data: { animalId: id, usuarioId: bId, servicoId: serviceId, funcionarioId: employeeId, dataHoraIni: new Date('2026-12-01T10:00:00Z'), dataHoraFim: new Date('2026-12-01T11:00:00Z') } });
+      return remove(id, scope);
+    });
+    try {
+      const res = await request(app).delete(`/animais/${pet.id}`).set('Cookie', b);
+      expect(res.status).toBe(409); expect(res.body.message).toMatch(/agendamentos/);
+      expect(await prisma.animal.findUnique({ where: { id: pet.id } })).not.toBe(null);
+    } finally { spy.mockRestore(); }
+  });
+  it('persiste perfil/endereço e preserva CPF e último endereço', async () => {
+    const res = await request(app).put('/auth/me').set('Cookie', a).send({ nome: ' Ana Maria ', email: ' ANA.MARIA@example.com ', telefone: '(21) 99999-4321' });
+    expect(res.status).toBe(200);
+    expect((await request(app).get('/auth/me').set('Cookie', a)).body.usuario).toMatchObject({ nome: 'Ana Maria', email: 'ana.maria@example.com', telefone: '21999994321', cpf: '52998224725' });
+    const blocked = await request(app).put('/auth/me').set('Cookie', a).send({ cpf: '11144477735' });
+    expect(blocked.status).toBe(400); expect(blocked.body.fieldErrors.cpf).toBeTruthy();
+    const added = await request(app).post('/enderecos').set('Cookie', a).send({ ...address, numero: 0, complemento: ' Casa ' });
+    expect(added.status).toBe(201);
+    expect((await request(app).put(`/enderecos/${added.body.id}`).set('Cookie', a).send({ rua: 'Rua Nova', complemento: null })).status).toBe(200);
+    expect((await request(app).get('/auth/me').set('Cookie', a)).body.usuario.enderecos).toContainEqual(expect.objectContaining({ id: added.body.id, rua: 'Rua Nova', numero: 0, complemento: null }));
+    expect((await request(app).delete(`/enderecos/${added.body.id}`).set('Cookie', a)).status).toBe(200);
+    const last = (await request(app).get('/auth/me').set('Cookie', a)).body.usuario.enderecos[0];
+    expect((await request(app).delete(`/enderecos/${last.id}`).set('Cookie', a)).status).toBe(409);
+  });
+  it('identifica campos inválidos e duplicidades normalizadas sem persistência parcial', async () => {
+    for (const [body, field] of [[{ ...registration, endereco: { ...address, cep: 'x' } }, 'endereco.cep'], [{ ...registration, cpf: 'invalid' }, 'cpf'], [{ ...registration, telefone: '' }, 'telefone'], [{ ...registration, confirmarSenha: 'different' }, 'confirmarSenha']] as const) {
+      const res = await request(app).post('/auth/cadastro').send(body);
+      expect(res.status).toBe(400); expect(res.body.fieldErrors[field]).toBeTruthy();
+    }
+    const before = { users: await prisma.usuario.count(), addresses: await prisma.endereco.count(), fidelities: await prisma.fidelidade.count() };
+    for (const [body, field] of [[{ ...registration, email: ' ANA.MARIA@EXAMPLE.COM ', cpf: '01234567890' }, 'email'], [{ ...registration, email: 'unique@example.com' }, 'cpf']] as const) {
+      const res = await request(app).post('/auth/cadastro').send(body);
+      expect(res.status).toBe(409); expect(res.body.fieldErrors[field]).toBeTruthy();
+    }
+    const original = await prisma.usuario.findUniqueOrThrow({ where: { id: aId } });
+    const failed = await request(app).put('/auth/me').set('Cookie', a).send({ nome: 'Não salvar', email: ' B@EXAMPLE.COM ', endereco: address });
+    expect(failed.status).toBe(409); expect(failed.body.fieldErrors.email).toBeTruthy();
+    expect((await prisma.usuario.findUniqueOrThrow({ where: { id: aId } })).nome).toBe(original.nome);
+    expect({ users: await prisma.usuario.count(), addresses: await prisma.endereco.count(), fidelities: await prisma.fidelidade.count() }).toEqual(before);
   });
 });

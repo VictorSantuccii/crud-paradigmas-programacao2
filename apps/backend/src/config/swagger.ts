@@ -56,19 +56,20 @@ const entidades: Record<string, Entidade> = {
       bairro: { type: "string", example: "Centro" },
       numero: { type: "integer", minimum: 0, example: 100 },
       rua: { type: "string", example: "Rua das Flores" },
-      usuarioId: idReferencia,
+      usuarioId: { ...idReferencia, description: "CLIENTE: derivado da sessão; omita nas requisições. ADMIN: informe na criação quando necessário." },
     },
-    obrigatorios: ["cep", "bairro", "numero", "rua", "usuarioId"],
+    obrigatorios: ["cep", "bairro", "numero", "rua"],
   },
   Animal: {
     campos: {
       idade: { type: "integer", minimum: 0, example: 3 },
       porte: { type: "string", enum: ["PEQUENO", "MEDIO", "GRANDE"] },
       especie: { type: "string", example: "Cachorro" },
+      raca: { type: "string", nullable: true, example: "Labrador", description: "Opcional. Texto aparado; null limpa; omissão na atualização preserva o valor." },
       nome: { type: "string", example: "Rex" },
-      usuarioId: idReferencia,
+      usuarioId: { ...idReferencia, description: "CLIENTE: derivado da sessão; omita nas requisições. ADMIN: informe na criação quando necessário." },
     },
-    obrigatorios: ["idade", "porte", "especie", "nome", "usuarioId"],
+    obrigatorios: ["idade", "porte", "especie", "nome"],
   },
   Plano: {
     campos: {
@@ -85,7 +86,7 @@ const entidades: Record<string, Entidade> = {
         example: { banho: 4, tosa: 2 },
       },
       dataAquisicao: { type: "string", format: "date", example: "2026-09-27" },
-      usuarioId: idReferencia,
+      usuarioId: { ...idReferencia, description: "CLIENTE: derivado da sessão; omita nas requisições. ADMIN: informe na criação quando necessário." },
       planoId: idReferencia,
     },
     obrigatorios: ["dataAquisicao", "usuarioId", "planoId"],
@@ -111,7 +112,7 @@ const entidades: Record<string, Entidade> = {
     campos: {
       dataHoraIni: dataHora,
       dataHoraFim: { ...dataHora, example: "2026-10-01T15:00:00Z" },
-      usuarioId: idReferencia,
+      usuarioId: { ...idReferencia, description: "CLIENTE: derivado da sessão; omita nas requisições. ADMIN: informe na criação quando necessário." },
       animalId: idReferencia,
       servicoId: idReferencia,
       funcionarioId: idReferencia,
@@ -176,7 +177,7 @@ const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
     title: "API Pet Shop",
-    version: "2.1.0",
+    version: "2.2.0",
     description:
       "API REST de usuários, animais, planos, assinaturas, serviços, funcionários e agendamentos com Express e Prisma.",
   },
@@ -216,7 +217,12 @@ const swaggerDefinition = {
     schemas: {
       Erro: {
         type: "object",
-        properties: { message: { type: "string" } },
+        required: ["message"],
+        properties: {
+          message: { type: "string" },
+          code: { type: "string", example: "PERFIL_INCOMPLETO" },
+          fieldErrors: { type: "object", additionalProperties: { type: "string" }, example: { "endereco.cep": "CEP inválido." } },
+        },
       },
       Mensagem: {
         type: "object",
@@ -247,3 +253,27 @@ for (const [path, item] of Object.entries(swaggerSpec.paths!)) {
     for (const [method, operation] of Object.entries(operations)) if (method === "get") operation.security = [];
   }
 }
+
+// Contratos compartilhados dos fluxos de cadastro, perfil, endereços e pets.
+for (const path of ['/auth/cadastro', '/auth/onboarding', '/auth/me', '/enderecos', '/enderecos/{id}', '/animais', '/animais/{id}']) {
+  const item = swaggerSpec.paths[path] as Record<string, { description?: string; responses?: Record<string, unknown> }>;
+  for (const [method, operation] of Object.entries(item)) {
+    const responses = operation.responses ||= {};
+    if (['post', 'put'].includes(method)) {
+      responses['400'] = erro('Dados inválidos, com fieldErrors quando o campo é identificável. Endereço aninhado usa endereco.cep, endereco.numero etc.');
+    }
+    if (['/auth/cadastro', '/auth/onboarding', '/auth/me'].includes(path) && ['post', 'put'].includes(method)) responses['409'] = erro('CPF ou e-mail normalizado já cadastrado; fieldErrors identifica a restrição única violada, inclusive em concorrência.');
+    if (!['/auth/cadastro', '/auth/onboarding'].includes(path)) {
+      responses['401'] = erro('Sessão ausente ou expirada.');
+      responses['403'] = erro('Registro de outro titular, acesso não permitido ou PERFIL_INCOMPLETO.');
+    }
+    if (path.startsWith('/enderecos') || path.startsWith('/animais')) {
+      operation.description = `${operation.description || ''} CLIENTE acessa somente registros próprios. O titular vem da sessão; não envie usuarioId. ID inexistente retorna 404 e registro de outro cliente retorna 403.`.trim();
+      if (path.endsWith('/{id}')) responses['404'] = erro('ID inexistente.');
+      if (method === 'delete') responses['409'] = erro(path.startsWith('/animais') ? 'Pet com agendamentos associados, inclusive vínculo criado durante a exclusão. O pet é preservado.' : 'Não é permitido remover o último endereço completo.');
+    }
+  }
+}
+
+const profileOperations = swaggerSpec.paths['/auth/me'] as Record<string, Record<string, unknown>>;
+profileOperations.put.requestBody = { required: true, content: { 'application/json': { schema: { type: 'object', minProperties: 1, properties: { nome: { type: 'string', minLength: 1 }, email: { type: 'string', format: 'email' }, telefone: { type: 'string' }, cpf: { type: 'string', description: 'Somente regularização de CPF ausente ou inválido. CPF válido exige atendimento administrativo.' }, endereco: { ...schemas.EnderecoUpdate, properties: { ...semCampos(entidades.Endereco.campos, ['usuarioId']), id: { type: 'integer', description: 'Endereço próprio; omitir cria um novo.' } } } } } } } };
