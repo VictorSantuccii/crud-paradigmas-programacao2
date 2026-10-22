@@ -1,97 +1,60 @@
-import { Role, Usuario } from "@prisma/client";
-import { badRequest, conflict, existeOu404 } from "../lib/errors";
-import { hashSenha } from "../lib/password";
-import {
-  enumeracao,
-  idReferencia,
-  obrigatorio,
-  opcional,
-  parseAtualizacao,
-  parseCriacao,
-  texto,
-} from "../lib/parsers";
-import * as agendamentoRepository from "../repositories/agendamentoRepository";
-import * as assinaturaRepository from "../repositories/assinaturaRepository";
-import * as fidelidadeRepository from "../repositories/fidelidadeRepository";
-import * as usuarioRepository from "../repositories/usuarioRepository";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const email = (valor: unknown, campo: string) => {
-  const resultado = texto(valor, campo).toLowerCase();
-  if (!EMAIL_REGEX.test(resultado)) {
-    throw badRequest(`O campo ${campo} deve ser um e-mail válido.`);
-  }
-  return resultado;
+import { Prisma } from '@prisma/client';
+import { Contexto, autorizar } from '../lib/authorization';
+import { badRequest, conflict, existeOu404 } from '../lib/errors';
+import { hashSenha } from '../lib/password';
+import prisma from '../lib/prisma';
+import { idReferencia, texto } from '../lib/parsers';
+import * as v from '../lib/identity';
+import { publico, usuarioSelect } from './authService';
+import * as usuarioRepository from '../repositories/usuarioRepository';
+import * as agendamentoRepository from '../repositories/agendamentoRepository';
+import * as assinaturaRepository from '../repositories/assinaturaRepository';
+const buscar = (id: number) => existeOu404(prisma.usuario.findUnique({ where: { id }, select: usuarioSelect }), 'Usuário não encontrado.');
+export const list = async (ctx?: Contexto) => { autorizar('usuario', true, ctx); return (await prisma.usuario.findMany({ select: usuarioSelect, orderBy: { id: 'desc' } })).map(publico); };
+export const getById = async (id: number, ctx?: Contexto) => { autorizar('usuario', true, ctx); return publico(await buscar(id)); };
+const papel = (value: unknown): 'CLIENTE' | 'FUNCIONARIO' => { if (value !== 'CLIENTE' && value !== 'FUNCIONARIO') throw badRequest('A API só provisiona CLIENTE e FUNCIONARIO. Administradores são criados pelo comando local.'); return value; };
+export const create = async (body: unknown, ctx?: Contexto) => {
+  autorizar('usuario', false, ctx);
+  const b = v.objeto(body);
+  v.permitirCampos(b, ['nome', 'email', 'cpf', 'telefone', 'senha', 'role', 'funcionarioId', 'funcionario', 'endereco']);
+  const role = papel(b.role);
+  const senhaHash = await hashSenha(v.senha(b.senha));
+  const dados = { nome: texto(b.nome, 'nome'), email: v.email(b.email), cpf: v.cpf(b.cpf), telefone: b.telefone == null && role === 'FUNCIONARIO' ? null : v.telefone(b.telefone), role, senhaHash };
+  const address = role === 'CLIENTE' ? v.endereco(b.endereco) : undefined;
+  return prisma.$transaction(async tx => {
+    let funcionarioId: number | null = null;
+    if (role === 'FUNCIONARIO') {
+      if ((b.funcionarioId === undefined) === (b.funcionario === undefined)) throw badRequest('Informe funcionarioId ou um novo funcionario.');
+      if (b.funcionario !== undefined) {
+        const f = v.objeto(b.funcionario); v.permitirCampos(f, ['nome', 'cargo', 'telefone']);
+        funcionarioId = (await tx.funcionario.create({ data: { nome: texto(f.nome, 'nome'), cargo: texto(f.cargo, 'cargo'), telefone: f.telefone == null ? null : v.telefone(f.telefone) } })).id;
+      } else { funcionarioId = idReferencia(b.funcionarioId, 'funcionarioId'); await existeOu404(tx.funcionario.findUnique({ where: { id: funcionarioId } }), 'Funcionário não encontrado.'); }
+    } else if (b.funcionarioId !== undefined || b.funcionario !== undefined) throw badRequest('Cliente não pode ter vínculo funcional.');
+    return publico(await tx.usuario.create({ data: { ...dados, ...(funcionarioId ? { funcionario: { connect: { id: funcionarioId } } } : {}), fidelidade: { create: { beneficioAtivo: false, qntdServicos: 0 } }, ...(address ? { enderecos: { create: address } } : {}) }, select: usuarioSelect }));
+  });
 };
-
-const senha = (valor: unknown, campo: string) => {
-  if (typeof valor !== "string" || valor.length === 0) {
-    throw badRequest(`O campo ${campo} deve ser um texto não vazio.`);
-  }
-  return valor;
+export const update = async (id: number, body: unknown, ctx?: Contexto) => {
+  autorizar('usuario', false, ctx);
+  const b = v.objeto(body); v.permitirCampos(b, ['nome', 'email', 'cpf', 'telefone', 'senha', 'role', 'funcionarioId']);
+  const atual = await buscar(id);
+  const data: Prisma.UsuarioUncheckedUpdateInput = {};
+  if (b.nome !== undefined) data.nome = texto(b.nome, 'nome');
+  if (b.email !== undefined) data.email = v.email(b.email);
+  if (b.cpf !== undefined) data.cpf = v.cpf(b.cpf);
+  if (b.telefone !== undefined) data.telefone = v.telefone(b.telefone);
+  if (b.senha !== undefined) data.senhaHash = await hashSenha(v.senha(b.senha));
+  if (b.role !== undefined) data.role = papel(b.role);
+  const role = b.role === undefined ? atual.role : papel(b.role);
+  const funcionarioId = b.funcionarioId === undefined ? atual.funcionarioId : b.funcionarioId === null ? null : idReferencia(b.funcionarioId, 'funcionarioId');
+  if ((role === 'FUNCIONARIO') !== (funcionarioId !== null)) throw badRequest('Papel e vínculo funcional inconsistentes.');
+  if (funcionarioId) await existeOu404(prisma.funcionario.findUnique({ where: { id: funcionarioId } }), 'Funcionário não encontrado.');
+  data.funcionarioId = funcionarioId;
+  return publico(await prisma.usuario.update({ where: { id }, data, select: usuarioSelect }));
 };
-
-const camposAtualizacao = {
-  email: opcional(email),
-  senha: obrigatorio(senha),
-  role: obrigatorio(enumeracao(Role)),
-  cpf: obrigatorio(texto),
-  nome: obrigatorio(texto),
-};
-
-const camposCriacao = {
-  ...camposAtualizacao,
-  fidelidadeId: opcional(idReferencia),
-};
-
-const NAO_ENCONTRADO = "Usuário não encontrado.";
-
-const semSenha = ({ senhaHash: _senhaHash, ...usuario }: Usuario) => usuario;
-
-const buscar = (id: number) => existeOu404(usuarioRepository.findById(id), NAO_ENCONTRADO);
-
-export const list = async () => (await usuarioRepository.findAll()).map(semSenha);
-
-export const getById = async (id: number) => semSenha(await buscar(id));
-
-export const create = async (body: unknown) => {
-  const { senha: senhaTexto, fidelidadeId, ...resto } = parseCriacao(camposCriacao, body);
-  const dados = { ...resto, senhaHash: await hashSenha(senhaTexto) };
-
-  if (fidelidadeId === null) {
-    return semSenha(await usuarioRepository.createComNovaFidelidade(dados));
-  }
-
-  await existeOu404(fidelidadeRepository.findById(fidelidadeId), "Fidelidade não encontrada.");
-  if (await usuarioRepository.findByFidelidadeId(fidelidadeId)) {
-    throw conflict("Essa fidelidade já pertence a outro usuário.");
-  }
-  return semSenha(await usuarioRepository.createComFidelidadeExistente(dados, fidelidadeId));
-};
-
-export const update = async (id: number, body: unknown) => {
-  const { senha: senhaTexto, ...resto } = parseAtualizacao(camposAtualizacao, body);
-  await buscar(id);
-
-  const dados =
-    senhaTexto === undefined ? resto : { ...resto, senhaHash: await hashSenha(senhaTexto) };
-
-  return semSenha(await usuarioRepository.update(id, dados));
-};
-
-export const remove = async (id: number) => {
-  const usuario = await buscar(id);
-
-  const [agendamentos, agendamentosDosAnimais, assinaturas] = await Promise.all([
-    agendamentoRepository.countByUsuario(id),
-    agendamentoRepository.countByDonoDoAnimal(id),
-    assinaturaRepository.countByUsuario(id),
-  ]);
-
-  if (agendamentos + agendamentosDosAnimais + assinaturas > 0) {
-    throw conflict("Usuário com agendamentos ou assinaturas vinculados não pode ser removido.");
-  }
-
-  await usuarioRepository.removerComFidelidade(id, usuario.fidelidadeId);
+export const remove = async (id: number, ctx?: Contexto) => {
+  autorizar('usuario', false, ctx);
+  const user = await buscar(id);
+  const counts = await Promise.all([agendamentoRepository.countByUsuario(id), agendamentoRepository.countByDonoDoAnimal(id), assinaturaRepository.countByUsuario(id)]);
+  if (counts.some(Boolean)) throw conflict('Usuário com agendamentos ou assinaturas não pode ser removido.');
+  await usuarioRepository.removerComFidelidade(id, user.fidelidadeId);
 };

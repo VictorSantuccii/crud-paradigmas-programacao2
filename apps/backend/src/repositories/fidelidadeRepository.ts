@@ -4,9 +4,9 @@ import prisma from "../lib/prisma";
 export const create = (data: Prisma.FidelidadeUncheckedCreateInput) =>
   prisma.fidelidade.create({ data });
 
-export const findAll = () => prisma.fidelidade.findMany({ orderBy: { id: "desc" } });
+export const findAll = (where: Prisma.FidelidadeWhereInput = {}) => prisma.fidelidade.findMany({ where, orderBy: { id: "desc" } });
 
-export const findById = (id: number) => prisma.fidelidade.findUnique({ where: { id } });
+export const findById = (id: number, scope: Prisma.FidelidadeWhereInput = {}) => prisma.fidelidade.findFirst({ where: { AND: [{ id }, scope] } });
 
 export const update = (id: number, data: Prisma.FidelidadeUncheckedUpdateInput) =>
   prisma.fidelidade.update({ where: { id }, data });

@@ -1,33 +1,34 @@
+import { Contexto } from "./authorization";
 import { asyncHandler } from "./asyncHandler";
 import { parseIdParam } from "./parsers";
 
 interface CrudService {
-  list: () => Promise<unknown>;
-  getById: (id: number) => Promise<unknown>;
-  create: (body: unknown) => Promise<unknown>;
-  update: (id: number, body: unknown) => Promise<unknown>;
-  remove: (id: number) => Promise<void>;
+  list: (ctx?: Contexto) => Promise<unknown>;
+  getById: (id: number, ctx?: Contexto) => Promise<unknown>;
+  create: (body: unknown, ctx?: Contexto) => Promise<unknown>;
+  update: (id: number, body: unknown, ctx?: Contexto) => Promise<unknown>;
+  remove: (id: number, ctx?: Contexto) => Promise<void>;
 }
 
 export const crudController = (service: CrudService, mensagemRemocao: string) => ({
-  list: asyncHandler(async (_req, res) => {
-    res.status(200).json(await service.list());
+  list: asyncHandler(async (req, res) => {
+    res.status(200).json(await service.list(req.usuario));
   }),
 
   getById: asyncHandler(async (req, res) => {
-    res.status(200).json(await service.getById(parseIdParam(req.params.id)));
+    res.status(200).json(await service.getById(parseIdParam(req.params.id), req.usuario));
   }),
 
   create: asyncHandler(async (req, res) => {
-    res.status(201).json(await service.create(req.body));
+    res.status(201).json(await service.create(req.body, req.usuario));
   }),
 
   update: asyncHandler(async (req, res) => {
-    res.status(200).json(await service.update(parseIdParam(req.params.id), req.body));
+    res.status(200).json(await service.update(parseIdParam(req.params.id), req.body, req.usuario));
   }),
 
   remove: asyncHandler(async (req, res) => {
-    await service.remove(parseIdParam(req.params.id));
+    await service.remove(parseIdParam(req.params.id), req.usuario);
     res.status(200).json({ message: mensagemRemocao });
   }),
 });

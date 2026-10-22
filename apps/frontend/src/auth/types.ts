@@ -3,6 +3,9 @@ export type Usuario = {
   nome: string;
   email: string | null;
   cpf: string;
+  telefone: string | null;
+  perfilCompleto: boolean;
+  camposPendentes: string[];
   role: string;
   fotoURL: string | null;
   enderecos: Array<{

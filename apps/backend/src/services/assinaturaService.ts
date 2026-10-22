@@ -1,3 +1,4 @@
+import { Contexto, autorizar } from "../lib/authorization";
 import { Assinatura, Prisma } from "@prisma/client";
 import { existeOu404 } from "../lib/errors";
 import {
@@ -42,11 +43,11 @@ const garantirVinculos = async (usuarioId?: number, planoId?: number) => {
 
 const buscar = (id: number) => existeOu404(assinaturaRepository.findById(id), NAO_ENCONTRADA);
 
-export const list = async () => (await assinaturaRepository.findAll()).map(formatar);
+const listInterno = async () => (await assinaturaRepository.findAll()).map(formatar);
 
-export const getById = async (id: number) => formatar(await buscar(id));
+const getByIdInterno = async (id: number) => formatar(await buscar(id));
 
-export const create = async (body: unknown) => {
+const createInterno = async (body: unknown) => {
   const { servicosRest, ...dados } = parseCriacao(campos, body);
   await garantirVinculos(dados.usuarioId, dados.planoId);
   return formatar(
@@ -54,7 +55,7 @@ export const create = async (body: unknown) => {
   );
 };
 
-export const update = async (id: number, body: unknown) => {
+const updateInterno = async (id: number, body: unknown) => {
   const { servicosRest, ...dados } = parseAtualizacao(campos, body);
   await buscar(id);
   await garantirVinculos(dados.usuarioId, dados.planoId);
@@ -66,7 +67,17 @@ export const update = async (id: number, body: unknown) => {
   );
 };
 
-export const remove = async (id: number) => {
+const removeInterno = async (id: number) => {
   await buscar(id);
   await assinaturaRepository.remove(id);
 };
+
+export const list = (ctx?: Contexto) => { autorizar("assinatura", true, ctx); return listInterno(); };
+
+export const getById = (id: number, ctx?: Contexto) => { autorizar("assinatura", true, ctx); return getByIdInterno(id); };
+
+export const create = (body: unknown, ctx?: Contexto) => { autorizar("assinatura", false, ctx); return createInterno(body); };
+
+export const update = (id: number, body: unknown, ctx?: Contexto) => { autorizar("assinatura", false, ctx); return updateInterno(id, body); };
+
+export const remove = (id: number, ctx?: Contexto) => { autorizar("assinatura", false, ctx); return removeInterno(id); };

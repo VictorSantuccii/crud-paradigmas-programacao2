@@ -2,7 +2,7 @@
 
 Projeto acadêmico de um sistema para gestão de um pet shop. A proposta reúne cadastro de clientes e animais, agendamento de serviços e controle de fidelidade. O repositório contém uma interface web em desenvolvimento e uma API REST com persistência em PostgreSQL.
 
-> **Estado atual:** autenticação e operações de CRUD da API estão implementadas. Algumas telas já existem, mas usam conteúdo de demonstração e ainda não concluem operações contra a API. A matriz de requisitos abaixo registra esse limite para não confundir protótipo visual com fluxo funcional.
+> **Estado atual:** autenticação, autorização por papel/titularidade, cadastro com perfil obrigatório e onboarding Google estão implementados na API e no formulário de conta. Telas de animais, agenda e fidelidade ainda têm partes demonstrativas; essas integrações permanecem para fases seguintes.
 
 ## Progresso das telas
 
@@ -11,9 +11,9 @@ Percentuais estimados considerando a interface, a conexão com a API e as regras
 | Tela | Rota | Implementado | Situação atual |
 | --- | --- | ---: | --- |
 | Página inicial | `/` | **90%** | Apresentação e navegação implementadas; falta revisar os links e conteúdos conforme o escopo final. |
-| Cadastro de cliente | `/cadastro` | **70%** | Cadastro conectado à API; faltam completar dados de contato/endereço e validações do requisito. |
+| Cadastro de cliente | `/cadastro` | **70%** | Cadastro conectado à API com CPF validado, telefone, endereço obrigatório e validações de duplicidade. |
 | Login | `/login` | **85%** | Login com e-mail/senha e Google conectado à API, com sessão em Redis. |
-| Completar cadastro Google | `/cadastro/google/cpf` | **80%** | Captura o CPF exigido para criar uma conta nova com Google; compartilha pendências de validação e perfil do cadastro. |
+| Completar cadastro Google | `/cadastro/google/cpf` | **80%** | Conclui CPF, telefone e endereço para conta Google nova; onboarding retoma após recarga por cookie temporário. |
 | Serviços | `/servicos` | **35%** | Formulário visual de pet, data e horário; opções são locais e não criam um agendamento persistido. |
 | Consultas | `/consultas` | **30%** | Fluxo visual existe e exige sessão no frontend; pets, especialidades, profissionais e horários são demonstrativos. |
 | Meus Pets / Perfil | `/meus-pets`, `/meu-perfil` | **30%** | Exibe dados básicos da sessão; pets, histórico e ações de edição/cadastro usam dados locais ou não têm ação persistente. |
@@ -28,22 +28,18 @@ Percentuais estimados considerando a interface, a conexão com a API e as regras
 
 ### Cadastro de cliente — `/cadastro`
 
-- Incluir telefone/WhatsApp e endereço no cadastro, conforme o RF001.
-- Validar CPF e normalizar sua representação antes de consultar duplicidade.
-- Exibir erros de e-mail ou CPF já cadastrados com orientação para entrar na conta.
-- Garantir que a tela continue mostrando somente campos realmente persistidos pela API.
+- Telefone/WhatsApp e endereço completos agora são obrigatórios; CPF e e-mail são validados e normalizados pelo backend.
+- Duplicidades são apresentadas no formulário e cadastro com conta, endereço e fidelidade é atômico.
 
 ### Login — `/login`
 
 - Manter os fluxos de e-mail/senha e Google e tratar estados de carregamento, falha de rede e sessão expirada.
-- Restringir as operações da API à sessão autenticada; atualmente a sessão protege apenas algumas rotas do frontend.
-- Aplicar permissões conforme o papel do usuário (`CLIENTE`, `FUNCIONARIO` ou `ADMIN`).
+- API revalida a sessão no banco em cada requisição privada e aplica papel, titularidade e escopo nos CRUDs.
 
 ### Completar cadastro Google — `/cadastro/google/cpf`
 
-- Validar o CPF antes de enviar e informar duplicidade de forma clara.
-- Depois de criar a conta, permitir completar os dados do RF001 que faltam, como telefone/WhatsApp e endereço.
-- Tratar cancelamento, falha do Firebase e retomada do cadastro sem perder o fluxo.
+- O onboarding exige CPF, telefone e endereço antes de persistir a nova conta e pode ser retomado por cookie após recarga.
+- Erros de validação, duplicidade e expiração da sessão são apresentados na tela.
 
 ### Serviços — `/servicos`
 
@@ -64,7 +60,7 @@ Percentuais estimados considerando a interface, a conexão com a API e as regras
 
 - Carregar e editar os dados do cliente pela API, incluindo telefone/WhatsApp e endereços.
 - Implementar cadastro, edição e remoção de pets usando `GET/POST/PUT/DELETE /animais`.
-- Filtrar pets e agendamentos pelo usuário autenticado; hoje as rotas CRUD não aplicam esse controle.
+- Filtrar pets e agendamentos pelo usuário autenticado; as rotas agora restringem esses dados ao titular.
 - Substituir histórico, vacinas, microchip, raça e demais dados fixos por dados persistidos, após incluí-los no modelo/API.
 - Conectar as preferências de contato a uma persistência real ou remover a ação de salvar enquanto não houver suporte.
 - Exibir o progresso de fidelidade e o benefício disponível com base no estado real do cliente.
@@ -79,24 +75,24 @@ Percentuais estimados considerando a interface, a conexão com a API e as regras
 
 | ID | Requisito | Status | Já existe | Pendente |
 | --- | --- | --- | --- | --- |
-| RF001 | Cadastrar clientes | **Parcial** | Cadastro de conta com nome, CPF, e-mail e senha; unicidade de CPF/e-mail; hash de senha; CRUD de endereço na API. | Telefone/WhatsApp no modelo, validação completa de CPF e integração do perfil/endereço nas telas. |
+| RF001 | Cadastrar clientes | **Parcial** | Cadastro com nome, CPF validado, e-mail, senha, telefone e endereço; perfil derivado; sessão e onboarding Google. | Conectar a tela de perfil a edição completa e adicionar dados de saúde conforme escopo. |
 | RF002 | Cadastrar animais | **Parcial** | API CRUD de animais com nome, espécie, idade, porte e dono; valida vínculo e bloqueia troca de dono/remoção quando há agendamento. | Conectar telas ao CRUD e incluir raça, além dos dados de saúde exibidos na interface se estiverem no escopo. |
 | RF003 | Agendar serviços | **Parcial** | API CRUD vincula cliente, animal, serviço e funcionário e valida referências, dono e horário final posterior ao inicial. | Conectar formulários, consultar disponibilidade e impedir conflitos de horário por funcionário. |
 | RF004 | Gerenciar fidelidade | **Parcial** | Entidade e CRUD de fidelidade com contador e benefício ativo; nova fidelidade é criada no cadastro de usuário. | Contabilizar banhos concluídos, liberar automaticamente um benefício a cada oito e aplicá-lo no agendamento seguinte. |
-| RNF001 | Controle de acesso | **Parcial** | Login, hash de senha, sessão Redis com cookie `HttpOnly`, consulta de sessão e logout; páginas de perfil/consultas protegidas no frontend. | Exigir autenticação na API e restringir acesso a dados e ações conforme cliente, funcionário ou proprietário. |
+| RNF001 | Controle de acesso | **Parcial** | Sessões Redis/HttpOnly revalidadas no PostgreSQL; CRUDs privados autenticados, escopados por titular e papel; bootstrap ADMIN local e provisionamento de FUNCIONARIO. | Painel administrativo e mudanças de estado de agendamento nas próximas fases. |
 
 ### Detalhes das regras das imagens
 
-- **RF001 — duplicidade:** e-mail e CPF são únicos no banco. O e-mail é normalizado para minúsculas na autenticação; CPF é comparado como texto, sem normalização de máscara ou validação de dígitos.
+- **RF001 — duplicidade:** e-mail é aparado e normalizado para minúsculas; CPF aceita máscara, valida dígitos verificadores e persiste 11 dígitos. Conflitos concorrentes retornam conflito.
 - **RF002 — porte:** o banco aceita `PEQUENO`, `MEDIO` e `GRANDE`; ainda não há regra de duração do serviço baseada no porte.
 - **RF003 — conflito:** não implementado. A API permite agendamentos sobrepostos para o mesmo funcionário.
 - **RF004 — benefício:** não implementado. O contador pode ser alterado pelo CRUD, mas não acompanha serviços finalizados.
-- **RNF001 — permissões:** o papel existe no modelo, mas a API não o utiliza para autorizar operações nem limita cada cliente aos próprios dados.
+- **RNF001 — permissões:** sessão, papel atual e titularidade são revalidados nas rotas privadas. Clientes acessam somente os próprios dados; funcionários consultam sua agenda vinculada; ADMIN gerencia os recursos desta fase.
 
 ## Funcionalidades da API já implementadas
 
-- CRUD de usuários, endereços, animais, fidelidades, planos, assinaturas, serviços, funcionários e agendamentos.
-- Validação de entradas e tratamento uniforme de erros HTTP (`400`, `401`, `404`, `409` e `500`).
+- CRUD de usuários (ADMIN), endereços e animais próprios (CLIENTE), leitura própria de fidelidade e agenda vinculada de funcionário; demais recursos de gestão são protegidos por papel.
+- Validação de entradas e tratamento uniforme de erros HTTP (`400`, `401`, `403`, `404`, `409` e `500`).
 - Senhas com hash, sessão em Redis e documentação interativa via Swagger.
 - Restrições de integridade para evitar remoção de registros com vínculos importantes.
 
@@ -179,13 +175,19 @@ pnpm prisma:generate
 pnpm prisma:migrate
 ```
 
+## Identidade e autorização
+
+Clientes precisam de telefone, CPF válido e endereço completo para habilitar a conta. A API calcula a completude pelos dados atuais; sessões Redis guardam somente o ID e papel/titularidade são recarregados do PostgreSQL em rotas privadas. Clientes acessam os próprios registros, funcionários consultam a agenda vinculada e ações administrativas exigem ADMIN. `GET /servicos` é público.
+
+Google novo usa cookie temporário de onboarding por 30 minutos. Antes da migration, execute `pnpm --filter @petshop/backend auditoria:legado` e resolva colisões normalizadas sem mesclar contas. Crie o primeiro ADMIN localmente com `pnpm --filter @petshop/backend admin:bootstrap` e credenciais explícitas no ambiente. Veja [matriz de permissões e contratos da fase 1](docs/fase-1-identidade-autorizacao.md) e [onboarding Google](docs/google-auth.md).
+
 ## API REST
 
 Todas as rotas de recursos usam JSON. A API está documentada no Swagger em `/api-docs`.
 
 | Recurso | Rotas |
 | --- | --- |
-| Autenticação | `POST /auth/cadastro`, `POST /auth/login`, `POST /auth/google`, `GET /auth/me`, `POST /auth/logout` |
+| Autenticação | `POST /auth/cadastro`, `POST /auth/login`, `POST /auth/google`, `GET/PUT /auth/me`, `GET/PUT /auth/onboarding`, `POST /auth/logout` |
 | Usuários | `/usuarios` e `/usuarios/:id` — listar, criar, consultar, atualizar e remover |
 | Endereços | `/enderecos` e `/enderecos/:id` |
 | Animais | `/animais` e `/animais/:id` |
@@ -200,7 +202,7 @@ Para os recursos CRUD, `GET` e `POST` são oferecidos na coleção; `GET`, `PUT`
 
 ## Modelo de dados
 
-O schema Prisma define as entidades `Usuario`, `Endereco`, `Animal`, `Fidelidade`, `Plano`, `Assinatura`, `Servico`, `Funcionario` e `Agendamento`. O usuário tem papel (`CLIENTE`, `FUNCIONARIO` ou `ADMIN`), CPF único, vínculo individual com fidelidade e relações com endereços, animais, assinaturas e agendamentos. O agendamento exige um usuário, animal, serviço, funcionário, início e fim.
+O schema Prisma define as entidades `Usuario`, `Endereco`, `Animal`, `Fidelidade`, `Plano`, `Assinatura`, `Servico`, `Funcionario` e `Agendamento`. O usuário tem papel (`CLIENTE`, `FUNCIONARIO` ou `ADMIN`), CPF único normalizado, telefone nullable para migração e vínculo funcional único opcional, vínculo individual com fidelidade e relações com endereços, animais, assinaturas e agendamentos. O agendamento exige um usuário, animal, serviço, funcionário, início e fim.
 
 O modelo ainda não representa status de conclusão/cancelamento do agendamento. Sem esse estado, não há base para determinar automaticamente quais serviços devem contar para a fidelidade.
 
@@ -217,4 +219,4 @@ O modelo ainda não representa status de conclusão/cancelamento do agendamento.
 
 ## Escopo e limitações
 
-Este README foi elaborado a partir do código presente no repositório e dos requisitos fornecidos. A existência de uma entidade ou endpoint significa que a operação correspondente está disponível na API; isso não garante que esteja conectada a uma tela ou protegida por autorização. Telas e funções demonstrativas devem ser substituídas por dados persistidos antes de considerar os fluxos RF001–RF004 completos.
+Este README foi elaborado a partir do código presente no repositório e dos requisitos fornecidos. A existência de uma entidade ou endpoint não garante que esteja conectada a uma tela. Pets, consultas, agendamentos e fidelidade ainda têm partes demonstrativas que serão integradas nas próximas fases.

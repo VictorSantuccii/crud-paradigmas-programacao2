@@ -8,5 +8,6 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (carregando) return <div className="min-h-screen bg-surface" aria-label="Carregando sessão" />;
   if (!usuario) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (usuario.role === "CLIENTE" && !usuario.perfilCompleto) return <Navigate to="/cadastro/google/cpf" replace state={{ from: location.pathname + location.search }} />;
   return children;
 }

@@ -37,6 +37,9 @@ model Fidelidade {
 model Usuario {
   id           Int           @id @default(autoincrement())
   email        String?       @unique
+  telefone     String?
+  funcionarioId Int? @unique @map("id_funcionario")
+  funcionario Funcionario? @relation(fields: [funcionarioId], references: [id], onDelete: Restrict)
   senhaHash    String        @map("senha_hash")
   role         Role
   cpf          String        @unique
@@ -110,6 +113,7 @@ model Servico {
 }
 
 model Funcionario {
+  usuario Usuario?
   id           Int           @id @default(autoincrement())
   nome         String
   cargo        String

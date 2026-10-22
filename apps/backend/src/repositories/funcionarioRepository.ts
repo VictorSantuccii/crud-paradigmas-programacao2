@@ -4,9 +4,9 @@ import prisma from "../lib/prisma";
 export const create = (data: Prisma.FuncionarioUncheckedCreateInput) =>
   prisma.funcionario.create({ data });
 
-export const findAll = () => prisma.funcionario.findMany({ orderBy: { id: "desc" } });
+export const findAll = (where: Prisma.FuncionarioWhereInput = {}) => prisma.funcionario.findMany({ where, orderBy: { id: "desc" } });
 
-export const findById = (id: number) => prisma.funcionario.findUnique({ where: { id } });
+export const findById = (id: number, scope: Prisma.FuncionarioWhereInput = {}) => prisma.funcionario.findFirst({ where: { AND: [{ id }, scope] } });
 
 export const update = (id: number, data: Prisma.FuncionarioUncheckedUpdateInput) =>
   prisma.funcionario.update({ where: { id }, data });
