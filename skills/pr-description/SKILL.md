@@ -7,12 +7,14 @@ description: Gera a descrição de um Pull Request em markdown a partir do diff 
 
 Gera uma descrição de Pull Request em Markdown, pronta para copiar do chat, com base no que a branch atual introduziu em relação à branch base.
 
+Para determinar o repositório e a referência base, siga também [petexpress-repository-target](../petexpress-repository-target/SKILL.md). Neste projeto, use o remoto `upstream` e compare com `upstream/main` (ou `upstream/master` se `main` não existir).
+
 ## Obter o diff
 
 1. Verifique as branches disponíveis. Use `main` como base padrão; se ela não existir, tente `master`.
-2. Atualize a referência remota da base com `git fetch origin <branch-base>`.
-3. Inspecione as mudanças introduzidas pela branch atual com `git diff origin/<branch-base>...HEAD`. Os três pontos são importantes: incluem apenas mudanças da branch atual desde o ponto em que ela divergiu da base.
-4. Leia o contexto dos commits com `git log origin/<branch-base>..HEAD --oneline`.
+2. Atualize a referência remota da base canônica com `git fetch upstream <branch-base>`.
+3. Inspecione as mudanças introduzidas pela branch atual com `git diff upstream/<branch-base>...HEAD`. Os três pontos são importantes: incluem apenas mudanças da branch atual desde o ponto em que ela divergiu da base.
+4. Leia o contexto dos commits com `git log upstream/<branch-base>..HEAD --oneline`.
 5. Se o diff estiver vazio, informe que não há mudanças para descrever e não invente uma descrição. Se a base ou o remoto não estiver disponível, explique o problema e tente resolver usando as branches/remotos existentes antes de tirar conclusões.
 
 Considere o diff e as mensagens de commit juntos. Analise o conteúdo real das alterações e não afirme que uma validação foi executada apenas porque um commit sugere isso.
