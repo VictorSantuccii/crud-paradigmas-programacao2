@@ -12,7 +12,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/servicos" element={<ServicosPage />} />
+      <Route path="/servicos" element={<ProtectedRoute><ServicosPage /></ProtectedRoute>} />
       <Route path="/consultas" element={<ProtectedRoute><ConsultasPage /></ProtectedRoute>} />
       <Route path="/meus-pets" element={<ProtectedRoute><MeusPetsPage /></ProtectedRoute>} />
       <Route path="/meu-perfil" element={<ProtectedRoute><MeusPetsPage /></ProtectedRoute>} />

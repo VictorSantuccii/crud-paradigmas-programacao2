@@ -1,14 +1,14 @@
 import { BookingSummary } from "@/components/servicos/BookingSummary";
 import { MonthCalendar } from "@/components/servicos/MonthCalendar";
-import { SelectField } from "@/components/servicos/SelectField";
 import { TimeSlots } from "@/components/servicos/TimeSlots";
-import type { CalendarDay, PetOption, TimeSlot } from "@/types/booking";
+import { Icon } from "@/components/ui/Icon";
+import type { CalendarDay, TimeSlot } from "@/types/booking";
 import { useState } from "react";
 
 type BookingFormProps = {
   serviceName: string;
   price: string;
-  petOptions: PetOption[];
+  selectedPet: string;
   calendarDays: CalendarDay[];
   timeSlots: TimeSlot[];
 };
@@ -16,27 +16,20 @@ type BookingFormProps = {
 export function BookingForm({
   serviceName,
   price,
-  petOptions,
+  selectedPet,
   calendarDays,
   timeSlots,
 }: BookingFormProps) {
-  const [petId, setPetId] = useState("");
-  const [selectedDay, setSelectedDay] = useState(11);
+  const [selectedDay, setSelectedDay] = useState(24);
   const [selectedTime, setSelectedTime] = useState("10:30");
 
   return (
-    <div className="flex w-full flex-col bg-surface-container-lowest p-6 md:p-10 lg:w-7/12">
-      <h2 className="mb-6 font-headline-md font-bold text-on-surface">
-        Detalhes do Agendamento
-      </h2>
-      <form className="flex flex-1 flex-col space-y-8">
-        <SelectField
-          id="pet-select"
-          label="Para qual pet?"
-          value={petId}
-          onChange={setPetId}
-          options={petOptions}
-        />
+    <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:col-span-5">
+      <section className="rounded-xl bg-surface-container-lowest p-6 shadow-[0_10px_25px_rgba(0,93,167,0.08)] sm:p-8">
+        <h2 className="mb-5 flex items-center gap-2 font-headline-md font-bold text-on-surface">
+          <Icon name="calendar_month" className="text-primary" />
+          Data &amp; Horário
+        </h2>
         <MonthCalendar
           days={calendarDays}
           selectedDay={selectedDay}
@@ -48,14 +41,16 @@ export function BookingForm({
           selectedTime={selectedTime}
           onSelectTime={setSelectedTime}
         />
-        <div className="grow" />
+      </section>
+      <section className="rounded-xl bg-surface-container-lowest p-6 shadow-[0_10px_25px_rgba(0,93,167,0.08)] sm:p-8">
         <BookingSummary
           serviceName={serviceName}
           price={price}
+          selectedPet={selectedPet}
           selectedDay={selectedDay}
           selectedTime={selectedTime}
         />
-      </form>
-    </div>
+      </section>
+    </aside>
   );
 }

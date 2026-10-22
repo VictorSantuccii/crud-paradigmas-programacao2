@@ -30,7 +30,7 @@ export function MonthCalendar({
             <Icon name="chevron_left" />
           </button>
           <span className="font-label-md font-bold text-on-surface">
-            Outubro 2023
+            Outubro 2026
           </span>
           <button
             type="button"
@@ -48,6 +48,9 @@ export function MonthCalendar({
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1 text-center font-body-md md:gap-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <span key={`empty-${index}`} aria-hidden="true" />
+          ))}
           {days.map((cell) => (
             <button
               key={cell.day}

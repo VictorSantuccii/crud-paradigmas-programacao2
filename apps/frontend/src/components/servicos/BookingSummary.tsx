@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 type BookingSummaryProps = {
   serviceName: string;
   price: string;
+  selectedPet: string;
   selectedDay: number;
   selectedTime: string;
 };
@@ -10,37 +11,52 @@ type BookingSummaryProps = {
 export function BookingSummary({
   serviceName,
   price,
+  selectedPet,
   selectedDay,
   selectedTime,
 }: BookingSummaryProps) {
   return (
-    <div className="mt-8 rounded-xl border border-outline-variant/30 bg-surface p-6">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="font-body-md text-on-surface-variant">Serviço</span>
-        <span className="font-label-md font-bold text-on-surface">
+    <div>
+      <h2 className="mb-5 font-headline-md font-bold text-on-surface">
+        Resumo do Agendamento
+      </h2>
+      <dl className="space-y-4 text-sm">
+      <div className="flex justify-between gap-3">
+        <dt className="text-on-surface-variant">Pet</dt>
+        <dd className="text-right font-bold text-on-surface">{selectedPet}</dd>
+      </div>
+      <div className="flex justify-between gap-3">
+        <dt className="text-on-surface-variant">Serviço</dt>
+        <dd className="text-right font-bold text-on-surface">
           {serviceName}
-        </span>
+        </dd>
       </div>
-      <div className="mb-4 flex items-center justify-between">
-        <span className="font-body-md text-on-surface-variant">Data e Hora</span>
-        <span className="font-label-md text-on-surface">
+      <div className="flex justify-between gap-3">
+        <dt className="text-on-surface-variant">Data e horário</dt>
+        <dd className="text-right font-bold text-primary">
           {selectedDay} Out, {selectedTime}
-        </span>
+        </dd>
       </div>
-      <hr className="mb-4 border-outline-variant/30" />
-      <div className="mb-6 flex items-end justify-between">
-        <span className="font-headline-md font-bold text-on-surface">Total</span>
-        <span className="font-headline-lg-mobile font-bold text-secondary-container">
+      </dl>
+      <div className="my-5 border-t border-dashed border-outline-variant" />
+      <div className="flex items-center justify-between">
+        <span className="font-label-md text-on-surface-variant">Valor do serviço</span>
+        <span className="font-headline-md text-xl font-bold text-secondary">
           {price}
         </span>
       </div>
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 font-label-md font-bold text-on-primary shadow-[0_4px_14px_rgba(0,93,167,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface-tint active:translate-y-0 active:shadow-sm"
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 font-headline-md font-bold text-on-primary shadow-lg transition hover:bg-primary-container"
       >
+        <Icon name="check_circle" />
         Avançar para Pagamento
         <Icon name="arrow_forward" className="text-[20px]" />
       </button>
+      <p className="mt-3 flex items-center justify-center gap-1 text-center text-xs text-on-surface-variant">
+        <Icon name="lock" />
+        Pagamento seguro no local após o atendimento.
+      </p>
     </div>
   );
 }
