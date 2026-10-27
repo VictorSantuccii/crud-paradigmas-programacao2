@@ -4,6 +4,7 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import { errorMiddleware } from "./lib/errors";
+import agendaRoutes from "./routes/agendaRoutes";
 import agendamentoRoutes from "./routes/agendamentoRoutes";
 import animalRoutes from "./routes/animalRoutes";
 import assinaturaRoutes from "./routes/assinaturaRoutes";
@@ -41,6 +42,8 @@ app.get("/", (_req, res) => {
     docs: "/api-docs",
   });
 });
+
+app.use(agendaRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Rota não encontrada." });

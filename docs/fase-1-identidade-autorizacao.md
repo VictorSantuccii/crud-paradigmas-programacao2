@@ -1,5 +1,8 @@
 # Fase 1: identidade e autorização
 
+> Agenda: os contratos e permissões de agendamentos desta fase foram evoluídos pela [fase 3](agenda-operacao.md), com cancelamento/transições em PATCH e sem DELETE físico.
+
+
 ## Rotas e papéis
 
 | Recurso | Público | CLIENTE completo | FUNCIONARIO | ADMIN |

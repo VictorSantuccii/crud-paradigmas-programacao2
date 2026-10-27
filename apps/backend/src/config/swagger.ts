@@ -1,3 +1,4 @@
+import { agendaSchemas, agendaPaths } from "./agendaSwagger";
 import swaggerJSDoc from "swagger-jsdoc";
 
 type Propriedades = Record<string, Record<string, unknown>>;
@@ -93,15 +94,20 @@ const entidades: Record<string, Entidade> = {
   },
   Servico: {
     campos: {
+      categoria: { type: "string", enum: ["BANHO_TOSA", "CONSULTA"], description: "Obrigatória em novos serviços; legado permanece sem classificação até configuração explícita." },
+      ativo: { type: "boolean", default: false },
       descricao: textoOpcional,
       duracaoMin: { type: "integer", minimum: 1, example: 60 },
       preco,
       nome: { type: "string", example: "Banho e tosa" },
     },
-    obrigatorios: ["duracaoMin", "preco", "nome"],
+    obrigatorios: ["duracaoMin", "preco", "nome", "categoria"],
+    somenteSaida: { categoria: { type: "string", nullable: true, enum: ["BANHO_TOSA", "CONSULTA"], description: "Legado pode permanecer sem classificação na listagem administrativa." } },
   },
   Funcionario: {
     campos: {
+      ativo: { type: "boolean", default: false },
+      servicoIds: { type: "array", uniqueItems: true, items: idReferencia, description: "Lista explícita de habilitações. PUT substitui a lista; [] remove todas." },
       nome: { type: "string", example: "Carlos Lima" },
       cargo: { type: "string", example: "Tosador" },
       telefone: textoOpcional,
@@ -109,22 +115,9 @@ const entidades: Record<string, Entidade> = {
     obrigatorios: ["nome", "cargo"],
   },
   Agendamento: {
-    campos: {
-      dataHoraIni: dataHora,
-      dataHoraFim: { ...dataHora, example: "2026-10-01T15:00:00Z" },
-      usuarioId: { ...idReferencia, description: "CLIENTE: derivado da sessão; omita nas requisições. ADMIN: informe na criação quando necessário." },
-      animalId: idReferencia,
-      servicoId: idReferencia,
-      funcionarioId: idReferencia,
-    },
-    obrigatorios: [
-      "dataHoraIni",
-      "dataHoraFim",
-      "usuarioId",
-      "animalId",
-      "servicoId",
-      "funcionarioId",
-    ],
+    campos: { dataHoraIni: dataHora, animalId: idReferencia, servicoId: idReferencia, funcionarioId: idReferencia, observacoes: { type: "string", nullable: true, maxLength: 300 } },
+    obrigatorios: ["dataHoraIni", "animalId", "servicoId", "funcionarioId"],
+    somenteSaida: { dataHoraFim: dataHora, usuarioId: idReferencia, precoContratado: { ...preco, nullable: true }, duracaoContratadaMin: { type: "number", minimum: 0, exclusiveMinimum: true }, status: { type: "string", enum: ["AGENDADO", "CONCLUIDO", "CANCELADO", "NAO_COMPARECEU"] }, animal: { type: "object", properties: { id, nome: { type: "string" }, especie: { type: "string" } } }, servico: { type: "object", properties: { id, nome: { type: "string" }, categoria: { type: "string", nullable: true } } }, funcionario: { $ref: "#/components/schemas/ProfissionalPublico" }, podeCancelar: { type: "boolean" }, podeReagendar: { type: "boolean" } },
   },
 };
 
@@ -177,7 +170,7 @@ const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
     title: "API Pet Shop",
-    version: "2.2.0",
+    version: "3.0.0",
     description:
       "API REST de usuários, animais, planos, assinaturas, serviços, funcionários e agendamentos com Express e Prisma.",
   },
@@ -229,6 +222,7 @@ const swaggerDefinition = {
         properties: { message: { type: "string" } },
       },
       ...schemas,
+      ...agendaSchemas,
     },
   },
 };
@@ -239,6 +233,10 @@ const swaggerOptions = {
 };
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions) as { paths: Record<string, unknown> };
+Object.assign(swaggerSpec.paths, agendaPaths);
+const catalogoGet = (swaggerSpec.paths['/servicos'] as Record<string, Record<string, unknown>>).get;
+catalogoGet.description = 'Catálogo público somente de serviços ativos classificados; preço e duração fixos por serviço. ADMIN consulta inativos em /servicos/administracao.';
+catalogoGet.parameters = [{ in: 'query', name: 'categoria', schema: { type: 'string', enum: ['BANHO_TOSA', 'CONSULTA'] } }];
 Object.assign(swaggerSpec.paths!, {
   "/auth/cadastro": { post: { summary: "Cadastra um cliente", security: [], requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["nome", "email", "cpf", "senha", "telefone", "endereco"], properties: { nome: { type: "string" }, email: { type: "string", format: "email" }, cpf: { type: "string" }, senha: { type: "string", minLength: 8 }, confirmarSenha: { type: "string" }, telefone: { type: "string" }, endereco: { type: "object", required: ["cep", "rua", "bairro", "numero"], properties: { cep: { type: "string" }, rua: { type: "string" }, bairro: { type: "string" }, numero: { type: "integer", minimum: 0 }, complemento: { type: "string", nullable: true } } } } } } } }, responses: { "201": { description: "Cliente criado; cookie petshop_session emitido" }, "400": { description: "Entrada inválida ou campo privilegiado" }, "409": { description: "E-mail ou CPF já cadastrado" } } } },
   "/auth/login": { post: { summary: "Inicia sessão por e-mail e senha", security: [], responses: { "200": { description: "Sessão criada" }, "401": { description: "Credenciais inválidas" } } } },

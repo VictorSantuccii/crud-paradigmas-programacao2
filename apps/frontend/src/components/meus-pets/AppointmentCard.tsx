@@ -1,44 +1,15 @@
-import { Icon } from "@/components/ui/Icon";
-import { upcomingAppointment } from "@/content/meus-pets";
-
-export function AppointmentCard() {
-  return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-surface-variant bg-surface-container-lowest p-4 soft-shadow md:flex-row">
-      <div className="flex w-full items-center gap-4 md:w-auto">
-        <div className="flex min-w-[70px] flex-col items-center justify-center rounded-xl bg-tertiary-container p-3 text-on-tertiary-container">
-          <span className="font-label-md uppercase">
-            {upcomingAppointment.month}
-          </span>
-          <span className="font-headline-lg">{upcomingAppointment.day}</span>
-        </div>
-        <div>
-          <h4 className="font-body-lg font-semibold text-on-surface">
-            {upcomingAppointment.title}
-          </h4>
-          <p className="mt-1 flex items-center gap-1 font-body-md text-on-surface-variant">
-            <Icon name="schedule" className="text-[16px]" />
-            {upcomingAppointment.time}
-            <span className="mx-2 text-outline">•</span>
-            <span className="font-medium text-primary">
-              {upcomingAppointment.petName}
-            </span>
-          </p>
-        </div>
-      </div>
-      <div className="mt-2 flex w-full gap-2 md:mt-0 md:w-auto">
-        <button
-          type="button"
-          className="flex-1 rounded-full border border-primary px-4 py-2 font-label-md text-primary transition-colors hover:bg-surface-container-low md:flex-none"
-        >
-          Reagendar
-        </button>
-        <button
-          type="button"
-          className="flex-1 rounded-full bg-primary px-4 py-2 font-label-md text-on-primary transition-opacity hover:opacity-90 md:flex-none"
-        >
-          Detalhes
-        </button>
-      </div>
-    </div>
-  );
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Icon } from '@/components/ui/Icon';
+import { dataHoraFormatada, moeda } from '@/lib/booking';
+import { estadosAgenda, type Agendamento } from '@/types/agenda';
+import { secondaryClass, actionClass } from '@/components/profile/ProfileUi';
+export function AppointmentCard({ item, pending, onCancel }: { item: Agendamento; pending: boolean; onCancel: (id: number, motivo: string) => Promise<void> }) {
+  const [confirmando, setConfirmando] = useState(false), [motivo, setMotivo] = useState('');
+  const inicio = new Date(item.dataHoraIni);
+  const mes = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'America/Sao_Paulo' }).format(inicio);
+  const dia = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', timeZone: 'America/Sao_Paulo' }).format(inicio);
+  return <article className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-4 soft-shadow"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div className="flex items-start gap-4"><div className="flex min-w-16 flex-col items-center justify-center rounded-xl bg-tertiary-container p-3 text-on-tertiary-container"><span className="font-label-md uppercase">{mes}</span><span className="font-headline-lg">{dia}</span></div><div className="min-w-0"><h3 className="font-body-lg font-semibold text-on-surface">{item.servico.nome}</h3><p className="mt-1 flex items-center gap-1 text-sm text-on-surface-variant"><Icon name="schedule" className="text-base" />{dataHoraFormatada(item.dataHoraIni)}</p><p className="mt-1 text-sm text-on-surface-variant"><span className="font-bold text-primary">{item.animal.nome}</span> • {item.funcionario.nome}</p><p className="mt-1 text-xs text-on-surface-variant">{estadosAgenda[item.status]} • {item.duracaoContratadaMin} min • {moeda(item.precoContratado)}</p></div></div><div className="flex flex-wrap gap-2">{item.podeReagendar && item.servico.categoria && !pending && <Link to={`${item.servico.categoria === 'CONSULTA' ? '/consultas' : '/servicos'}?reagendar=${item.id}`} className={secondaryClass}>Reagendar</Link>}{item.podeCancelar && <button type="button" disabled={pending} onClick={() => setConfirmando(true)} className={secondaryClass}>Cancelar <span className="sr-only">{item.servico.nome} de {item.animal.nome}</span></button>}{!item.podeCancelar && !item.podeReagendar && <span className="text-xs text-on-surface-variant">Prazo de alteração encerrado</span>}</div></div>
+    {confirmando && <form className="mt-4 rounded-xl bg-surface-container-low p-4" onSubmit={event => { event.preventDefault(); void onCancel(item.id, motivo).then(() => setConfirmando(false)); }}><p className="mb-3 text-sm font-bold">Cancelar {item.servico.nome} de {item.animal.nome}?</p><label className="block text-sm">Motivo (opcional)<textarea value={motivo} disabled={pending} onChange={event => setMotivo(event.target.value)} maxLength={300} rows={2} className="mt-2 w-full rounded-lg border border-outline-variant bg-surface p-3" /></label><div className="mt-3 flex flex-wrap gap-2"><button type="submit" className={actionClass} disabled={pending}>{pending ? 'Cancelando…' : 'Confirmar cancelamento'}</button><button type="button" disabled={pending} className={secondaryClass} onClick={() => setConfirmando(false)}>Manter agendamento</button></div></form>}
+  </article>;
 }

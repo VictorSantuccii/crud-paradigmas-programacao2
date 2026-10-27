@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useAppointments } from '@/booking/useAppointments';
+import { AgendaSection } from '@/components/profile/AgendaSection';
+import { dataHoraFormatada } from '@/lib/booking';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { PageShell } from '@/components/layout/PageShell';
@@ -12,6 +15,7 @@ import { mensagemErro } from '@/lib/api';
 const tabs = [
   { id: 'geral', label: 'Visão Geral & Dados', icon: 'dashboard', target: 'resumo' },
   { id: 'pets', label: 'Meus Pets & Carteirinhas', icon: 'pets', target: 'pets' },
+  { id: 'agenda', label: 'Agenda & Histórico', icon: 'calendar_month', target: 'agenda' },
   { id: 'dados', label: 'Dados Pessoais', icon: 'person', target: 'dados-pessoais' },
   { id: 'enderecos', label: 'Endereços', icon: 'home_pin', target: 'enderecos' },
 ];
@@ -23,6 +27,8 @@ function Panel({ children, className = '', id }: { children: ReactNode; classNam
 export function MeusPetsPage() {
   const { usuario, recarregarUsuario } = useAuth();
   const location = useLocation();
+  const agenda = useAppointments();
+  const proximaConsulta = agenda.itens.find(i => i.status === 'AGENDADO' && i.servico.categoria === 'CONSULTA' && new Date(i.dataHoraIni).getTime() > Date.now());
   const pageNotice = (location.state as { notice?: string } | null)?.notice;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,6 +42,8 @@ export function MeusPetsPage() {
     void recarregarUsuario().catch(error => { if (active) setError(mensagemErro(error)); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [recarregarUsuario]);
+
+  useEffect(() => { if (!loading && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'start' }); }, [loading, location.hash]);
 
   async function retry() {
     setLoading(true); setError('');
@@ -69,13 +77,13 @@ export function MeusPetsPage() {
 
       <section id="resumo" aria-label="Resumo rápido" className="grid scroll-mt-28 grid-cols-1 gap-gutter sm:grid-cols-2 lg:grid-cols-4">
         <Panel className="flex flex-col justify-between transition-shadow hover:shadow-md"><div className="flex items-center justify-between"><span className="font-label-md text-on-surface-variant">Pets cadastrados</span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-fixed text-primary"><Icon name="pets" filled /></span></div><div className="mt-4 flex items-baseline gap-2"><strong className="font-display-lg leading-none text-on-surface">{petCount === null ? '—' : petCount}</strong><span className="text-on-surface-variant">{petCount === 1 ? 'pet' : 'pets'}</span></div><button type="button" onClick={() => goToTab('pets', 'pets')} className="mt-3 flex items-center gap-1.5 text-left font-label-md text-primary hover:underline">Abrir carteirinhas <Icon name="arrow_forward" className="text-base" /></button></Panel>
-        <Panel className="flex flex-col justify-between transition-shadow hover:shadow-md"><div className="flex items-center justify-between"><span className="font-label-md text-on-surface-variant">Endereços cadastrados</span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-fixed text-secondary"><Icon name="location_on" filled /></span></div><div className="mt-4 flex items-baseline gap-2"><strong className="font-display-lg leading-none text-on-surface">{usuario?.enderecos.length ?? '—'}</strong><span className="text-on-surface-variant">{usuario?.enderecos.length === 1 ? 'endereço' : 'endereços'}</span></div><button type="button" onClick={() => goToTab('enderecos', 'enderecos')} className="mt-3 flex items-center gap-1.5 text-left font-label-md text-primary hover:underline">Gerenciar endereços <Icon name="arrow_forward" className="text-base" /></button></Panel>
+        <Panel className="flex flex-col justify-between transition-shadow hover:shadow-md"><div className="flex items-center justify-between"><span className="font-label-md text-on-surface-variant">Próxima Consulta</span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-fixed text-secondary"><Icon name="calendar_month" filled /></span></div><div className="mt-4"><strong className="block font-headline-md text-on-surface">{agenda.loading ? 'Carregando…' : agenda.error ? 'Agenda indisponível' : proximaConsulta ? dataHoraFormatada(proximaConsulta.dataHoraIni) : 'Nenhuma agendada'}</strong>{proximaConsulta && <span className="text-sm text-on-surface-variant">{proximaConsulta.animal.nome} • {proximaConsulta.servico.nome}</span>}</div><button type="button" onClick={() => goToTab('agenda', 'agenda')} className="mt-3 flex items-center gap-1.5 text-left font-label-md text-primary hover:underline">Ver minha agenda <Icon name="arrow_forward" className="text-base" /></button></Panel>
         <Panel className="flex flex-col justify-between transition-shadow hover:shadow-md"><div className="flex items-center justify-between"><span className="font-label-md text-on-surface-variant">Dados do perfil</span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-tertiary-fixed text-tertiary"><Icon name="shield" filled /></span></div><div className="mt-4"><strong className="block font-headline-md text-tertiary">{usuario?.perfilCompleto ? 'Completo' : usuario ? 'Pendente' : '—'}</strong><span className="text-sm text-on-surface-variant">{usuario?.perfilCompleto ? 'Informações preenchidas' : 'Revise seus dados'}</span></div><button type="button" onClick={() => goToTab('dados', 'dados-pessoais')} className="mt-3 flex items-center gap-1.5 text-left font-label-md text-primary hover:underline">Revisar dados <Icon name="arrow_forward" className="text-base" /></button></Panel>
         <Panel className="flex flex-col justify-between transition-shadow hover:shadow-md"><div className="flex items-center justify-between"><span className="font-label-md text-on-surface-variant">Conta</span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container"><Icon name="verified_user" filled /></span></div><div className="mt-4"><strong className="block font-headline-md capitalize text-on-surface">{usuario?.role || '—'}</strong><span className="text-sm text-on-surface-variant">Acesso PetExpress</span></div><div className="mt-3 truncate font-label-md text-on-surface-variant">{usuario?.email || 'E-mail não informado'}</div></Panel>
       </section>
 
       <div className="profile-columns grid grid-cols-1 items-start gap-gutter">
-        <div className="profile-columns-main flex min-w-0 flex-col gap-8"><PetsSection onCountChange={onPetCountChange} /></div>
+        <div className="profile-columns-main flex min-w-0 flex-col gap-8"><PetsSection onCountChange={onPetCountChange} /><AgendaSection agenda={agenda} /></div>
         <aside className="profile-columns-side flex min-w-0 flex-col gap-8">{usuario && <><PersonalSection usuario={usuario} /><AddressesSection usuario={usuario} /></>}</aside>
       </div>
     </div>

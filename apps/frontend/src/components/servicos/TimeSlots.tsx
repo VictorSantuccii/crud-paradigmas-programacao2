@@ -1,50 +1,9 @@
-import type { TimeSlot } from "@/types/booking";
-import { cn } from "@/lib/cn";
-
-type TimeSlotsProps = {
-  slots: TimeSlot[];
-  selectedDay: number;
-  selectedTime: string;
-  onSelectTime: (time: string) => void;
-};
-
-export function TimeSlots({
-  slots,
-  selectedDay,
-  selectedTime,
-  onSelectTime,
-}: TimeSlotsProps) {
-  return (
-    <div>
-      <span className="mb-4 block font-label-md text-on-surface-variant">
-        Horários disponíveis para {selectedDay}/10
-      </span>
-      <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
-        {slots.map((slot) => {
-          const isSelected = selectedTime === slot.time;
-          const disabled = !slot.available;
-          return (
-            <button
-              key={slot.time}
-              type="button"
-              disabled={disabled}
-              onClick={() => slot.available && onSelectTime(slot.time)}
-              className={cn(
-                "rounded-lg border py-2 px-3 text-center font-body-md transition-colors",
-                disabled &&
-                  "cursor-not-allowed border-outline-variant/30 bg-surface-variant text-outline-variant line-through opacity-50",
-                !disabled &&
-                  !isSelected &&
-                  "border-outline-variant bg-surface text-on-surface-variant hover:border-primary hover:text-primary",
-                isSelected &&
-                  "border-2 border-primary bg-primary-fixed font-bold text-primary shadow-sm",
-              )}
-            >
-              {slot.time}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+import type { Slot } from '@/types/agenda';
+import { chaveSlot, horaFormatada } from '@/lib/booking';
+import { cn } from '@/lib/cn';
+export function TimeSlots({ slots, selectedTime, onSelectTime, disabled }: { slots: Slot[]; selectedTime: string; onSelectTime: (id: string) => void; disabled?: boolean }) {
+  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{slots.map(slot => {
+    const id = chaveSlot(slot);
+    return <button key={id} type="button" disabled={disabled} aria-pressed={selectedTime === id} onClick={() => onSelectTime(id)} className={cn('min-h-11 rounded-lg border px-2 py-2 text-center font-body-md transition-colors', selectedTime === id ? 'border-2 border-primary bg-primary-fixed font-bold text-primary shadow-sm' : 'border-outline-variant bg-surface text-on-surface-variant hover:border-primary hover:text-primary')}><span className="block">{horaFormatada(slot.inicio)}</span><span className="block break-words text-xs">{slot.funcionario.nome}</span></button>;
+  })}</div>;
 }

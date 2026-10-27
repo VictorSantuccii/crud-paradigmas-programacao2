@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { autenticar, exigirCompleto } from '../lib/session';
+import controller from '../controllers/agendaController';
+const router = Router();
+router.get('/disponibilidade', controller.disponibilidade);
+router.use(['/configuracao-agenda', '/bloqueios-agenda'], autenticar, exigirCompleto);
+router.get('/configuracao-agenda', controller.configuracao);
+router.put('/configuracao-agenda', controller.configurar);
+router.get('/bloqueios-agenda', controller.bloqueios);
+router.post('/bloqueios-agenda', controller.bloquear);
+router.delete('/bloqueios-agenda/:id', controller.removerBloqueio);
+export default router;
