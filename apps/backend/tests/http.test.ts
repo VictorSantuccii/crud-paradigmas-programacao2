@@ -14,11 +14,12 @@ let a: string, b: string, admin: string, employee: string;
 let aId: number, bId: number, animalB: number, employeeId: number, serviceId: number;
 beforeAll(async () => {
   if (!process.env.DATABASE_URL?.includes('petshop_test') || !process.env.REDIS_URL?.endsWith('/15')) throw new Error('Use bancos isolados de teste.');
+  vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-27T12:00:00Z'));
   await conectarRedis();
   await prisma.$executeRawUnsafe('TRUNCATE usuarios, fidelidades, enderecos, animais, funcionarios, servicos, agendamentos, assinaturas, planos RESTART IDENTITY CASCADE');
   await redis.flushDb();
 });
-afterAll(async () => { await prisma.$disconnect(); if (redis.isOpen) await redis.quit(); });
+afterAll(async () => { vi.useRealTimers(); await prisma.$disconnect(); if (redis.isOpen) await redis.quit(); });
 describe('HTTP identidade e autorização', () => {
   it('nega todas as rotas privadas sem sessão', async () => {
     for (const path of ['usuarios', 'enderecos', 'animais', 'agendamentos', 'fidelidades', 'funcionarios', 'planos', 'assinaturas']) {
@@ -96,8 +97,9 @@ describe('HTTP identidade e autorização', () => {
     const provision = await request(app).post('/usuarios').set('Cookie', admin).send({ nome: 'Funcionário', email: 'employee@example.com', cpf: '15350946056', senha: '12345678', role: 'FUNCIONARIO', funcionario: { nome: 'Funcionário', cargo: 'Tosador' } });
     expect(provision.status).toBe(201); employeeId = provision.body.funcionarioId;
     employee = cookie(await request(app).post('/auth/login').send({ email: 'employee@example.com', senha: '12345678' }));
-    serviceId = (await prisma.servico.create({ data: { nome: 'Banho', preco: 50, duracaoMin: 30 } })).id;
-    const booking = { dataHoraIni: '2026-11-01T10:00:00Z', dataHoraFim: '2026-11-01T10:30:00Z', animalId: animalB, servicoId: serviceId, funcionarioId: employeeId };
+    serviceId = (await prisma.servico.create({ data: { nome: 'Banho', categoria: 'BANHO_TOSA', ativo: true, preco: 50, duracaoMin: 30, profissionais: { connect: { id: employeeId } } } })).id;
+    await prisma.funcionario.update({ where: { id: employeeId }, data: { ativo: true } });
+    const booking = { dataHoraIni: '2026-11-03T12:00:00Z', animalId: animalB, servicoId: serviceId, funcionarioId: employeeId };
     expect((await request(app).post('/agendamentos').set('Cookie', a).send(booking)).status).toBe(403);
     const created = await request(app).post('/agendamentos').set('Cookie', b).send(booking);
     expect(created.status).toBe(201);
@@ -129,7 +131,7 @@ describe('sessões inválidas e recursos ausentes', () => {
     for (const [path, id] of [['enderecos', userB.enderecos[0].id], ['agendamentos', agendamento.id]] as const) {
       const list = await request(app).get(`/${path}?usuarioId=${bId}`).set('Cookie', a);
       expect(list.body.every((item: { usuarioId: number }) => item.usuarioId === aId)).toBe(true);
-      for (const method of ['get', 'put', 'delete'] as const) expect((await request(app)[method](`/${path}/${id}`).set('Cookie', a).send({ nome: 'Intruso' })).status).toBe(403);
+      for (const method of (path === 'agendamentos' ? ['get', 'put'] : ['get', 'put', 'delete']) as ('get' | 'put' | 'delete')[]) expect((await request(app)[method](`/${path}/${id}`).set('Cookie', a).send({ nome: 'Intruso' })).status).toBe(403);
     }
     expect((await request(app).get(`/fidelidades/${userB.fidelidadeId}`).set('Cookie', a)).status).toBe(403);
     const ownFidelity = await request(app).get(`/fidelidades?usuarioId=${bId}`).set('Cookie', a);
@@ -183,7 +185,7 @@ describe('fase 2: perfil, endereços e pets persistidos', () => {
     const pet = await prisma.animal.create({ data: { nome: 'Concorrente', especie: 'Cão', idade: 1, porte: 'GRANDE', usuarioId: bId } });
     const remove = animalRepository.remove;
     const spy = vi.spyOn(animalRepository, 'remove').mockImplementationOnce(async (id, scope) => {
-      await prisma.agendamento.create({ data: { animalId: id, usuarioId: bId, servicoId: serviceId, funcionarioId: employeeId, dataHoraIni: new Date('2026-12-01T10:00:00Z'), dataHoraFim: new Date('2026-12-01T11:00:00Z') } });
+      await prisma.agendamento.create({ data: { animalId: id, usuarioId: bId, servicoId: serviceId, funcionarioId: employeeId, duracaoContratadaMin: 60, dataHoraIni: new Date('2026-12-01T12:00:00Z'), dataHoraFim: new Date('2026-12-01T13:00:00Z') } });
       return remove(id, scope);
     });
     try {

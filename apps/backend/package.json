@@ -14,7 +14,8 @@
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest run",
     "admin:bootstrap": "ts-node src/commands/bootstrapAdmin.ts",
-    "auditoria:legado": "ts-node src/commands/auditarLegado.ts"
+    "auditoria:legado": "ts-node src/commands/auditarLegado.ts",
+    "auditoria:agenda": "ts-node src/commands/auditarAgenda.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

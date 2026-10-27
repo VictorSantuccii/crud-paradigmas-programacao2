@@ -87,7 +87,7 @@ export const data: Parser<Date> = (valor, campo) => {
 };
 
 const DATA_HORA_REGEX =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/;
+  /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
 
 export const dataHora: Parser<Date> = (valor, campo) => {
   if (typeof valor !== "string" || !DATA_HORA_REGEX.test(valor)) {
@@ -95,6 +95,7 @@ export const dataHora: Parser<Date> = (valor, campo) => {
       `O campo ${campo} deve estar em ISO 8601 com fuso, por exemplo 2026-10-01T14:00:00Z.`,
     );
   }
+  data(valor.slice(0, 10), campo);
   const resultado = new Date(valor);
   if (Number.isNaN(resultado.getTime())) {
     throw badRequest(`O campo ${campo} não é uma data e hora válida.`);

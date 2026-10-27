@@ -1,36 +1,6 @@
-import { Icon } from "@/components/ui/Icon";
-import { historyItems } from "@/content/meus-pets";
-
-export function HistoryList() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-lowest soft-shadow">
-      {historyItems.map((item, index) => (
-        <div
-          key={item.id}
-          className={`flex items-center justify-between p-4 transition-colors hover:bg-surface-container-low ${
-            index < historyItems.length - 1
-              ? "border-b border-surface-variant"
-              : ""
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="rounded-full bg-surface-container-highest p-2 text-on-surface-variant">
-              <Icon name={item.icon} />
-            </div>
-            <div>
-              <h4 className="font-body-md font-semibold text-on-surface">
-                {item.title}
-              </h4>
-              <p className="font-label-md text-on-surface-variant">
-                {item.subtitle}
-              </p>
-            </div>
-          </div>
-          <span className="hidden rounded-full bg-tertiary-fixed px-3 py-1 font-label-md text-tertiary sm:inline-block">
-            {item.status}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+import { Icon } from '@/components/ui/Icon';
+import { dataHoraFormatada } from '@/lib/booking';
+import { estadosAgenda, type Agendamento } from '@/types/agenda';
+export function HistoryList({ itens }: { itens: Agendamento[] }) {
+  return <div className="overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-lowest soft-shadow">{!itens.length && <p className="p-5 text-sm text-on-surface-variant">Nenhum atendimento no histórico.</p>}{itens.map(item => <article key={item.id} className="flex flex-col justify-between gap-3 border-b border-surface-variant p-4 last:border-0 sm:flex-row sm:items-center"><div className="flex items-start gap-4"><span className="rounded-full bg-surface-container-highest p-2 text-on-surface-variant"><Icon name={item.servico.categoria === 'CONSULTA' ? 'stethoscope' : 'shower'} /></span><div><h3 className="font-body-md font-semibold text-on-surface">{item.servico.nome} • {item.animal.nome}</h3><p className="mt-1 text-sm text-on-surface-variant">{dataHoraFormatada(item.dataHoraIni)} • {item.funcionario.nome}</p></div></div><span className="self-start rounded-full bg-tertiary-fixed px-3 py-1 text-sm text-tertiary">{estadosAgenda[item.status]}</span></article>)}</div>;
 }

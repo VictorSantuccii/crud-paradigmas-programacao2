@@ -1,59 +1,51 @@
-import { Contexto, autorizar } from "../lib/authorization";
-import { Servico } from "@prisma/client";
-import { conflict, existeOu404 } from "../lib/errors";
-import {
-  inteiro,
-  obrigatorio,
-  opcional,
-  parseAtualizacao,
-  parseCriacao,
-  preco,
-  precoSaida,
-  texto,
-} from "../lib/parsers";
-import * as agendamentoRepository from "../repositories/agendamentoRepository";
-import * as servicoRepository from "../repositories/servicoRepository";
-
-const campos = {
-  descricao: opcional(texto),
-  duracaoMin: obrigatorio(inteiro(1)),
-  preco: obrigatorio(preco),
-  nome: obrigatorio(texto),
-};
-
-const NAO_ENCONTRADO = "Serviço não encontrado.";
-
-const formatar = (servico: Servico) => ({ ...servico, preco: precoSaida(servico.preco) });
-
-const buscar = (id: number) => existeOu404(servicoRepository.findById(id), NAO_ENCONTRADO);
-
-const listInterno = async () => (await servicoRepository.findAll()).map(formatar);
-
-const getByIdInterno = async (id: number) => formatar(await buscar(id));
-
-const createInterno = async (body: unknown) =>
-  formatar(await servicoRepository.create(parseCriacao(campos, body)));
-
-const updateInterno = async (id: number, body: unknown) => {
+import { CategoriaServico, Prisma, Servico } from '@prisma/client';
+import prisma from '../lib/prisma';
+import { Contexto, autorizar } from '../lib/authorization';
+import { badRequest, conflict, existeOu404 } from '../lib/errors';
+import { booleano, enumeracao, inteiro, obrigatorio, opcional, parseAtualizacao, parseCriacao, preco, texto } from '../lib/parsers';
+import { objetoEstrito } from '../lib/agenda';
+import { transacaoAgenda } from '../repositories/agendaRepository';
+const campos = { descricao: opcional(texto), duracaoMin: obrigatorio(inteiro(1)), preco: obrigatorio(preco), nome: obrigatorio(texto), categoria: obrigatorio(enumeracao(CategoriaServico)), ativo: obrigatorio(booleano) };
+const formatar = (r: Servico) => ({ ...r, preco: Number(r.preco) });
+export async function list(_ctx?: Contexto, query: Record<string, unknown> = {}) {
+  const categoria = query.categoria === undefined ? undefined : enumeracao(CategoriaServico)(query.categoria, 'categoria');
+  return (await prisma.servico.findMany({ where: { ativo: true, categoria: categoria ?? { not: null } }, orderBy: { nome: 'asc' } })).map(formatar);
+}
+export async function getById(id: number) {
+  return formatar(await existeOu404(prisma.servico.findFirst({ where: { id, ativo: true, categoria: { not: null } } }), 'Serviço não encontrado.'));
+}
+export async function profissionais(id: number) {
+  await getById(id);
+  return prisma.funcionario.findMany({ where: { ativo: true, servicos: { some: { id } } }, select: { id: true, nome: true, cargo: true }, orderBy: { nome: 'asc' } });
+}
+// ADMIN precisa enxergar também os registros legados inativos, sem torná-los públicos.
+export async function listAdmin(ctx?: Contexto) {
+  autorizar('servico', false, ctx);
+  return (await prisma.servico.findMany({ orderBy: { id: 'asc' } })).map(formatar);
+}
+export async function create(body: unknown, ctx?: Contexto) {
+  autorizar('servico', false, ctx);
+  const b = objetoEstrito(body, Object.keys(campos));
+  const dados = parseCriacao(campos, { ...b, ativo: b.ativo === undefined ? false : b.ativo });
+  return transacaoAgenda(async db => formatar(await db.servico.create({ data: dados })));
+}
+export async function update(id: number, body: unknown, ctx?: Contexto) {
+  autorizar('servico', false, ctx); objetoEstrito(body, Object.keys(campos));
   const dados = parseAtualizacao(campos, body);
-  await buscar(id);
-  return formatar(await servicoRepository.update(id, dados));
-};
-
-const removeInterno = async (id: number) => {
-  await buscar(id);
-  if ((await agendamentoRepository.countByServico(id)) > 0) {
-    throw conflict("Serviço com agendamentos vinculados não pode ser removido.");
-  }
-  await servicoRepository.remove(id);
-};
-
-export const list = (ctx?: Contexto) => { autorizar("servico", true, ctx); return listInterno(); };
-
-export const getById = (id: number, ctx?: Contexto) => { autorizar("servico", true, ctx); return getByIdInterno(id); };
-
-export const create = (body: unknown, ctx?: Contexto) => { autorizar("servico", false, ctx); return createInterno(body); };
-
-export const update = (id: number, body: unknown, ctx?: Contexto) => { autorizar("servico", false, ctx); return updateInterno(id, body); };
-
-export const remove = (id: number, ctx?: Contexto) => { autorizar("servico", false, ctx); return removeInterno(id); };
+  return transacaoAgenda(async db => {
+    const atual = await existeOu404(db.servico.findUnique({ where: { id } }), 'Serviço não encontrado.');
+    if ((dados.ativo ?? atual.ativo) && !(dados.categoria ?? atual.categoria)) throw badRequest('Classifique o serviço antes de ativá-lo.', 'categoria');
+    return formatar(await db.servico.update({ where: { id }, data: dados }));
+  });
+}
+export async function remove(id: number, ctx?: Contexto) {
+  autorizar('servico', false, ctx);
+  return transacaoAgenda(async db => {
+    await existeOu404(db.servico.findUnique({ where: { id } }), 'Serviço não encontrado.');
+    if (await db.agendamento.count({ where: { servicoId: id } })) throw conflict('Serviço com agendamentos vinculados não pode ser removido.');
+    try { await db.servico.delete({ where: { id } }); } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') throw conflict('Serviço com vínculos não pode ser removido.');
+      throw error;
+    }
+  });
+}

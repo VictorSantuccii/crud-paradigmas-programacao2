@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { autenticar, exigirCompleto } from "../lib/session";
 import controller from "../controllers/servicoController";
 
 const router = Router();
@@ -35,6 +36,8 @@ const router = Router();
  */
 router.post("/", controller.create);
 router.get("/", controller.list);
+router.get("/administracao", autenticar, exigirCompleto, controller.administracao);
+router.get("/:id/profissionais", controller.profissionais);
 
 /**
  * @swagger

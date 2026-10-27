@@ -1,40 +1,5 @@
-import { Icon } from "@/components/ui/Icon";
-import type { ServiceDetail } from "@/types/booking";
-
-type ServicePanelProps = {
-  detail: ServiceDetail;
-};
-
-export function ServicePanel({ detail }: ServicePanelProps) {
-  return (
-    <div className="flex w-full flex-col bg-surface-container-low p-6 md:p-10 lg:w-5/12">
-      <div className="relative mb-6 h-64 overflow-hidden rounded-xl bg-surface-container-high">
-        <img
-          src={detail.image}
-          alt={detail.imageAlt}
-          className="h-full w-full object-cover"
-        />
-      </div>
-      <div className="mb-4 flex items-start justify-between">
-        <h1 className="font-headline-lg-mobile font-bold text-primary md:font-headline-lg">
-          {detail.name}
-        </h1>
-        <div className="flex items-center gap-1 rounded-full bg-tertiary-container px-3 py-1 font-label-md text-on-tertiary shadow-sm">
-          <Icon name="schedule" className="text-[16px]" />
-          {detail.duration}
-        </div>
-      </div>
-      <p className="mb-6 font-body-md text-on-surface-variant">
-        {detail.description}
-      </p>
-      <div className="mt-auto space-y-2">
-        {detail.perks.map((perk) => (
-          <div key={perk} className="flex items-center gap-3 text-on-surface">
-            <Icon name="check_circle" className="text-primary" />
-            <span className="font-body-md">{perk}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+import { Icon } from '@/components/ui/Icon';
+import type { Booking } from '@/booking/useBooking';
+export function ServicePanel({ booking: b }: { booking: Booking }) {
+  return <div className="flex w-full flex-col bg-surface-container-low p-6 md:p-10 lg:w-5/12"><div aria-hidden="true" className="mb-6 flex h-64 items-center justify-center overflow-hidden rounded-xl bg-surface-container-high text-primary"><Icon name="shower" className="text-8xl!" /></div><label htmlFor="service-select" className="mb-2 font-label-md text-on-surface-variant">Escolha o serviço</label><select id="service-select" value={b.servicoId ?? ''} disabled={b.pending || !!b.original || !!b.sucesso} onChange={event => b.trocarServico(Number(event.target.value))} className="mb-6 min-h-12 w-full rounded-lg border border-outline bg-surface px-4 py-3 text-on-surface"><option value="" disabled>Selecione um serviço</option>{b.servicos.filter(s => !b.original || s.id === b.original.servicoId).map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}</select>{!b.servicos.length && <p role="status" className="mb-4 text-sm text-on-surface-variant">Nenhum serviço disponível no momento.</p>}<div className="mb-4 flex flex-wrap items-start justify-between gap-3"><h1 className="font-headline-lg-mobile font-bold text-primary md:font-headline-lg">{b.reagendando ? 'Reagendar Serviço' : b.servico?.nome || 'Agendar Serviço'}</h1>{b.servico && <span className="flex items-center gap-1 rounded-full bg-tertiary-container px-3 py-1 font-label-md text-on-tertiary shadow-sm"><Icon name="schedule" className="text-base" />{b.original?.duracaoContratadaMin ?? b.servico.duracaoMin} min</span>}</div><p className="mb-6 font-body-md text-on-surface-variant">{b.servico?.descricao || 'Escolha um serviço do catálogo, o pet e um horário disponível para confirmar o atendimento.'}</p>{b.reagendando && <p className="mt-auto text-sm text-on-surface-variant">Pet, serviço, preço e duração contratados são preservados.</p>}</div>;
 }

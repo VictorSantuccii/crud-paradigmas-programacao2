@@ -1,88 +1,106 @@
-import { Contexto, autorizar, escopo, dono } from "../lib/authorization";
-import { forbidden } from "../lib/errors";
-import { badRequest, existeOu404 } from "../lib/errors";
-import {
-  dataHora,
-  idReferencia,
-  obrigatorio,
-  parseAtualizacao,
-  parseCriacao,
-} from "../lib/parsers";
-import * as agendamentoRepository from "../repositories/agendamentoRepository";
-import * as animalRepository from "../repositories/animalRepository";
-import * as funcionarioRepository from "../repositories/funcionarioRepository";
-import * as servicoRepository from "../repositories/servicoRepository";
-import * as usuarioRepository from "../repositories/usuarioRepository";
+import { Agendamento, Prisma, StatusAgendamento } from '@prisma/client';
+import prisma from '../lib/prisma';
+import { Contexto, autorizar, escopo } from '../lib/authorization';
+import { conflict, existeOu404, forbidden } from '../lib/errors';
+import { dataHora, enumeracao, idReferencia, obrigatorio, opcional, parseAtualizacao, parseCriacao } from '../lib/parsers';
+import { Configuracao, instanteLocal, objetoEstrito, somaDias } from '../lib/agenda';
+import { AgendaDb, bloquearAgendamento, relacoesAgendamento, transacaoAgenda } from '../repositories/agendaRepository';
+import { configuracao, disponibilidade, idQuery, janela, textoCurto, validarHorario } from './agendaService';
 
-const campos = {
-  dataHoraIni: obrigatorio(dataHora),
-  dataHoraFim: obrigatorio(dataHora),
-  usuarioId: obrigatorio(idReferencia),
-  animalId: obrigatorio(idReferencia),
-  servicoId: obrigatorio(idReferencia),
-  funcionarioId: obrigatorio(idReferencia),
+const campos = { animalId: obrigatorio(idReferencia), servicoId: obrigatorio(idReferencia), funcionarioId: obrigatorio(idReferencia), dataHoraIni: obrigatorio(dataHora), observacoes: opcional(textoCurto) };
+const editaveis = { funcionarioId: campos.funcionarioId, dataHoraIni: campos.dataHoraIni, observacoes: campos.observacoes };
+const formatar = <T extends Agendamento>(r: T) => ({ ...r, precoContratado: r.precoContratado === null ? null : Number(r.precoContratado) });
+const acoes = (r: Agendamento, ctx: Contexto | undefined, config: Configuracao) => {
+  const antecedencia = (r.dataHoraIni.getTime() - Date.now()) / 3600000;
+  const aberto = r.status === 'AGENDADO';
+  return {
+    podeCancelar: aberto && (ctx?.role === 'ADMIN' || ctx?.role === 'FUNCIONARIO' || antecedencia >= config.antecedenciaCancelamentoHoras),
+    podeReagendar: aberto && antecedencia > 0 && (ctx?.role === 'ADMIN' || ctx?.role === 'CLIENTE' && antecedencia >= config.antecedenciaReagendamentoHoras),
+  };
 };
-
-type Vinculos = {
-  dataHoraIni: Date;
-  dataHoraFim: Date;
-  usuarioId: number;
-  animalId: number;
-  servicoId: number;
-  funcionarioId: number;
-};
-
-const NAO_ENCONTRADO = "Agendamento não encontrado.";
-
-const validar = async (agendamento: Vinculos, ctx?: Contexto) => {
-  if (agendamento.dataHoraFim <= agendamento.dataHoraIni) {
-    throw badRequest("dataHoraFim deve ser posterior a dataHoraIni.");
+async function buscar(db: AgendaDb, id: number, ctx?: Contexto) {
+  const scope = escopo('agendamento', ctx);
+  const r = await existeOu404(db.agendamento.findUnique({ where: { id }, include: relacoesAgendamento }), 'Agendamento não encontrado.');
+  if (scope.usuarioId && r.usuarioId !== scope.usuarioId || scope.funcionarioId && r.funcionarioId !== scope.funcionarioId) throw forbidden();
+  return r;
+}
+export async function list(ctx?: Contexto, query: Record<string, unknown> = {}) {
+  const where: Prisma.AgendamentoWhereInput = escopo('agendamento', ctx);
+  if (query.status !== undefined) where.status = enumeracao(StatusAgendamento)(query.status, 'status');
+  if (query.dataInicio !== undefined || query.dataFim !== undefined) {
+    const range = janela(query);
+    where.dataHoraIni = { gte: instanteLocal(range.dataInicio, '00:00'), lt: instanteLocal(somaDias(range.dataFim, 1), '00:00') };
   }
-
-  const [, animal] = await Promise.all([
-    existeOu404(usuarioRepository.findById(agendamento.usuarioId), "Usuário não encontrado."),
-    existeOu404(animalRepository.findById(agendamento.animalId), "Animal não encontrado."),
-    existeOu404(servicoRepository.findById(agendamento.servicoId), "Serviço não encontrado."),
-    existeOu404(
-      funcionarioRepository.findById(agendamento.funcionarioId),
-      "Funcionário não encontrado.",
-    ),
-  ]);
-
-  if (ctx?.role === "CLIENTE" && animal.usuarioId !== ctx.id) throw forbidden("Animal não pertence à conta.");
-  if (animal.usuarioId !== agendamento.usuarioId) {
-    throw badRequest("O animal informado não pertence ao usuário do agendamento.");
-  }
-};
-
-export const list = (ctx?: Contexto) => agendamentoRepository.findAll(escopo("agendamento", ctx));
-
-export const getById = async (id: number, ctx?: Contexto) => {
-  const scoped = await agendamentoRepository.findById(id, escopo("agendamento", ctx));
-  if (scoped) return scoped;
-  await existeOu404(agendamentoRepository.findById(id), NAO_ENCONTRADO);
-  throw forbidden();
-};
-
-export const create = async (body: unknown, ctx?: Contexto) => {
-  autorizar("agendamento", false, ctx);
-  body = dono(body, ctx);
-  const dados = parseCriacao(campos, body);
-  await validar(dados, ctx);
-  return agendamentoRepository.create(dados);
-};
-
-export const update = async (id: number, body: unknown, ctx?: Contexto) => {
-  autorizar("agendamento", false, ctx);
-  body = dono(body, ctx);
-  const dados = parseAtualizacao(campos, body);
-  const atual = await getById(id, ctx);
-  await validar({ ...atual, ...dados }, ctx);
-  return agendamentoRepository.update(id, dados, escopo("agendamento", ctx));
-};
-
-export const remove = async (id: number, ctx?: Contexto) => {
-  autorizar("agendamento", false, ctx);
-  await getById(id, ctx);
-  await agendamentoRepository.remove(id, escopo("agendamento", ctx));
-};
+  const [registros, config] = await Promise.all([prisma.agendamento.findMany({ where, include: relacoesAgendamento, orderBy: { dataHoraIni: 'asc' } }), configuracao()]);
+  return registros.map(r => ({ ...formatar(r), ...acoes(r, ctx, config) }));
+}
+export const getById = async (id: number, ctx?: Contexto) => { const r = await buscar(prisma, id, ctx); return { ...formatar(r), ...acoes(r, ctx, await configuracao()) }; };
+function snapshot(r: Agendamento): Prisma.InputJsonObject {
+  return { dataHoraIni: r.dataHoraIni.toISOString(), dataHoraFim: r.dataHoraFim.toISOString(), funcionarioId: r.funcionarioId, status: r.status, precoContratado: r.precoContratado === null ? null : Number(r.precoContratado), duracaoContratadaMin: r.duracaoContratadaMin };
+}
+async function evento(db: AgendaDb, depois: Agendamento, ctx: Contexto, acao: string, antes?: Agendamento, motivo?: string | null) {
+  await db.eventoAgendamento.create({ data: { agendamentoId: depois.id, autorId: ctx.id, acao, motivo, ...(antes ? { antes: snapshot(antes) } : {}), depois: snapshot(depois) } });
+}
+export async function create(body: unknown, ctx?: Contexto) {
+  autorizar('agendamento', false, ctx);
+  objetoEstrito(body, Object.keys(campos)); const dados = parseCriacao(campos, body);
+  return transacaoAgenda(async db => {
+    const animal = await existeOu404(db.animal.findUnique({ where: { id: dados.animalId } }), 'Animal não encontrado.');
+    if (ctx!.role === 'CLIENTE' && animal.usuarioId !== ctx!.id) throw forbidden('Animal não pertence à conta.');
+    const contrato = await validarHorario(db, dados);
+    const r = await db.agendamento.create({ data: { ...dados, ...contrato, usuarioId: animal.usuarioId, status: 'AGENDADO' }, include: relacoesAgendamento });
+    await evento(db, r, ctx!, 'CRIACAO');
+    return formatar(r);
+  });
+}
+export async function update(id: number, body: unknown, ctx?: Contexto) {
+  autorizar('agendamento', false, ctx);
+  return transacaoAgenda(async db => {
+    await bloquearAgendamento(db, id); const atual = await buscar(db, id, ctx);
+    if (atual.status !== 'AGENDADO') throw conflict('Somente agendamentos em aberto podem ser alterados.');
+    objetoEstrito(body, Object.keys(editaveis)); const dados = parseAtualizacao(editaveis, body);
+    const reagendar = dados.dataHoraIni !== undefined || dados.funcionarioId !== undefined;
+    let fim: Date | undefined;
+    if (reagendar) {
+      const config = await configuracao(db);
+      const agora = new Date();
+      if (atual.dataHoraIni <= agora || ctx!.role === 'CLIENTE' && atual.dataHoraIni.getTime() - agora.getTime() < config.antecedenciaReagendamentoHoras * 3600000) throw conflict('Prazo para reagendamento encerrado.');
+      const validado = await validarHorario(db, { dataHoraIni: dados.dataHoraIni ?? atual.dataHoraIni, servicoId: atual.servicoId, funcionarioId: dados.funcionarioId ?? atual.funcionarioId, duracaoMin: atual.duracaoContratadaMin, ignorarId: id, antecedenciaHoras: ctx!.role === 'ADMIN' ? 0 : config.antecedenciaReagendamentoHoras });
+      fim = validado.dataHoraFim;
+    }
+    const r = await db.agendamento.update({ where: { id }, data: { ...dados, ...(fim ? { dataHoraFim: fim } : {}) }, include: relacoesAgendamento });
+    await evento(db, r, ctx!, reagendar ? 'REAGENDAMENTO' : 'OBSERVACOES', atual);
+    return formatar(r);
+  });
+}
+export async function status(id: number, body: unknown, ctx?: Contexto) {
+  // Escopo permite ao profissional responsável executar apenas esta operação de escrita.
+  escopo('agendamento', ctx);
+  const b = objetoEstrito(body, ['status', 'motivo']);
+  const novo = enumeracao(StatusAgendamento)(b.status, 'status');
+  const motivo = textoCurto(b.motivo, 'motivo');
+  if (novo === 'AGENDADO') throw conflict('Estados finais não podem ser reabertos.');
+  return transacaoAgenda(async db => {
+    await bloquearAgendamento(db, id); const atual = await buscar(db, id, ctx);
+    if (ctx!.role === 'CLIENTE' && novo !== 'CANCELADO') throw forbidden();
+    if (atual.status === novo) return formatar(atual);
+    if (atual.status !== 'AGENDADO') throw conflict('Transição de estado incompatível.');
+    const config = await configuracao(db), agora = new Date();
+    if (ctx!.role === 'CLIENTE' && atual.dataHoraIni.getTime() - agora.getTime() < config.antecedenciaCancelamentoHoras * 3600000) throw conflict('Prazo para cancelamento encerrado.');
+    if (novo !== 'CANCELADO' && agora < atual.dataHoraFim) throw conflict('Aguarde o término previsto do atendimento.');
+    const r = await db.agendamento.update({ where: { id }, data: { status: novo }, include: relacoesAgendamento });
+    await evento(db, r, ctx!, novo, atual, motivo);
+    return formatar(r);
+  });
+}
+export async function disponibilidadeReagendamento(id: number, query: Record<string, unknown>, ctx?: Contexto) {
+  autorizar('agendamento', false, ctx);
+  const range = janela(query, 31);
+  return prisma.$transaction(async db => {
+    const atual = await buscar(db, id, ctx);
+    if (atual.status !== 'AGENDADO') throw conflict('Agendamento encerrado.');
+    const config = await configuracao(db);
+    const r = await disponibilidade(db, { ...range, servicoId: atual.servicoId, duracaoMin: atual.duracaoContratadaMin, ignorarId: id, funcionarioId: query.funcionarioId === undefined ? undefined : idQuery(query.funcionarioId, 'funcionarioId'), antecedenciaHoras: ctx!.role === 'ADMIN' ? 0 : config.antecedenciaReagendamentoHoras });
+    return { ...r, preco: atual.precoContratado === null ? null : Number(atual.precoContratado), slots: r.slots.map(s => ({ ...s, preco: atual.precoContratado === null ? null : Number(atual.precoContratado) })) };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+}

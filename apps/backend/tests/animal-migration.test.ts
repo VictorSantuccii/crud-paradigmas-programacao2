@@ -18,5 +18,5 @@ it('adiciona raça nula sem alterar animais preexistentes ou vínculos', async (
   await db.$executeRawUnsafe(`INSERT INTO agendamentos (id, "dataHoraIni", "dataHoraFim", id_usuario, id_animal, id_servico, id_funcionario) VALUES (9, '2026-12-01T10:00:00Z', '2026-12-01T11:00:00Z', 1, 7, 1, 1)`);
   const migration = readFileSync('prisma/migrations/20261022010000_animal_raca/migration.sql', 'utf8');
   await db.$executeRawUnsafe(migration);
-  expect(await db.animal.findUnique({ where: { id: 7 }, include: { agendamentos: true } })).toMatchObject({ id: 7, nome: 'Lua', usuarioId: 1, idade: 3, raca: null, agendamentos: [{ id: 9, animalId: 7, usuarioId: 1 }] });
+  expect(await db.animal.findUnique({ where: { id: 7 }, include: { agendamentos: { select: { id: true, animalId: true, usuarioId: true } } } })).toMatchObject({ id: 7, nome: 'Lua', usuarioId: 1, idade: 3, raca: null, agendamentos: [{ id: 9, animalId: 7, usuarioId: 1 }] });
 });
