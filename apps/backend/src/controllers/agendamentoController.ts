@@ -2,6 +2,7 @@ import { asyncHandler } from '../lib/asyncHandler';
 import { parseIdParam } from '../lib/parsers';
 import * as service from '../services/agendamentoService';
 export default {
+  previa: asyncHandler(async (req, res) => { res.json(await service.previa(req.body, req.usuario)); }),
   list: asyncHandler(async (req, res) => { res.json(await service.list(req.usuario, req.query)); }),
   getById: asyncHandler(async (req, res) => { res.json(await service.getById(parseIdParam(req.params.id), req.usuario)); }),
   create: asyncHandler(async (req, res) => { res.status(201).json(await service.create(req.body, req.usuario)); }),

@@ -27,8 +27,8 @@ it('audita legado, aborta intervalos inválidos/sobrepostos e preserva IDs, vín
   await db.$executeRawUnsafe(`UPDATE agendamentos SET "dataHoraIni" = '2026-12-01T12:45:00', "dataHoraFim" = '2026-12-01T13:00:00' WHERE id=10`);
   await db.$executeRawUnsafe(`UPDATE agendamentos SET "dataHoraFim" = '2026-12-02T13:00:00' WHERE id=11`);
   await db.$transaction(tx => execute(tx, migration));
-  expect(await db.agendamento.findUnique({ where: { id: 9 } })).toMatchObject({ id: 9, animalId: 7, usuarioId: 1, servicoId: 1, funcionarioId: 1, status: 'AGENDADO', precoContratado: null, duracaoContratadaMin: 45 });
-  expect(await db.servico.findUnique({ where: { id: 1 } })).toMatchObject({ categoria: null, ativo: false });
+  expect(await db.agendamento.findUnique({ where: { id: 9 }, select: { id: true, animalId: true, usuarioId: true, servicoId: true, funcionarioId: true, status: true, precoContratado: true, duracaoContratadaMin: true } })).toMatchObject({ id: 9, animalId: 7, usuarioId: 1, servicoId: 1, funcionarioId: 1, status: 'AGENDADO', precoContratado: null, duracaoContratadaMin: 45 });
+  expect(await db.servico.findUnique({ where: { id: 1 }, select: { categoria: true, ativo: true } })).toMatchObject({ categoria: null, ativo: false });
   expect(await db.funcionario.findUnique({ where: { id: 1 } })).toMatchObject({ ativo: false });
   expect(await db.configuracaoAgenda.count()).toBe(1); expect(await db.eventoAgendamento.count()).toBe(0);
 });

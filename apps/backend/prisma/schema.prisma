@@ -37,10 +37,30 @@ enum TipoPlano {
   PREMIUM
 }
 
+enum EstadoBeneficio {
+  DISPONIVEL
+  RESERVADO
+  CONSUMIDO
+  REVOGADO
+}
+
+enum TipoMovimentoFidelidade {
+  IMPORTACAO
+  CONTAGEM
+  EMISSAO
+  RESERVA
+  LIBERACAO
+  CONSUMO
+  AJUSTE
+}
+
 model Fidelidade {
   id             Int      @id @default(autoincrement())
   beneficioAtivo Boolean
   qntdServicos   Int
+  progresso      Int @default(0)
+  beneficios     BeneficioFidelidade[]
+  movimentos     MovimentoFidelidade[]
   usuario        Usuario?
 
   @@map("fidelidades")
@@ -63,6 +83,7 @@ model Usuario {
   assinaturas  Assinatura[]
   agendamentos Agendamento[]
   eventosAgenda EventoAgendamento[]
+  movimentosFidelidade MovimentoFidelidade[]
 
   @@map("usuarios")
 }
@@ -116,6 +137,7 @@ model Assinatura {
 }
 
 model Servico {
+  elegivelFidelidade Boolean @default(false)
   categoria CategoriaServico?
   ativo Boolean @default(false)
   profissionais Funcionario[] @relation("Habilitacao")
@@ -144,6 +166,15 @@ model Funcionario {
 }
 
 model Agendamento {
+  elegivelFidelidade Boolean @default(false)
+  precoBase Decimal? @db.Decimal(10, 2)
+  desconto Decimal @default(0) @db.Decimal(10, 2)
+  beneficioId Int?
+  beneficio BeneficioFidelidade? @relation("ContratoBeneficio", fields: [beneficioId], references: [id], onDelete: Restrict)
+  usoBeneficio BeneficioFidelidade? @relation("UsoBeneficio")
+  beneficioGerado BeneficioFidelidade? @relation("GeracaoBeneficio")
+  movimentosFidelidade MovimentoFidelidade[] @relation("MovimentosAgendamento")
+  contagemFidelidade MovimentoFidelidade? @relation("ContagemAgendamento")
   status StatusAgendamento @default(AGENDADO)
   observacoes String? @db.VarChar(300)
   precoContratado Decimal? @db.Decimal(10, 2)
@@ -202,4 +233,43 @@ model EventoAgendamento {
 
   @@index([agendamentoId, instante])
   @@map("eventos_agendamento")
+}
+
+model BeneficioFidelidade {
+  id Int @id @default(autoincrement())
+  fidelidadeId Int
+  fidelidade Fidelidade @relation(fields: [fidelidadeId], references: [id], onDelete: Restrict)
+  estado EstadoBeneficio @default(DISPONIVEL)
+  criadoEm DateTime @default(now())
+  geradorId Int? @unique
+  gerador Agendamento? @relation("GeracaoBeneficio", fields: [geradorId], references: [id], onDelete: Restrict)
+  agendamentoId Int? @unique
+  agendamento Agendamento? @relation("UsoBeneficio", fields: [agendamentoId], references: [id], onDelete: Restrict)
+  contratos Agendamento[] @relation("ContratoBeneficio")
+  movimentos MovimentoFidelidade[]
+
+  @@index([fidelidadeId, estado, criadoEm, id])
+  @@map("beneficios_fidelidade")
+}
+
+model MovimentoFidelidade {
+  id Int @id @default(autoincrement())
+  fidelidadeId Int
+  fidelidade Fidelidade @relation(fields: [fidelidadeId], references: [id], onDelete: Restrict)
+  tipo TipoMovimentoFidelidade
+  instante DateTime @default(now())
+  autorId Int?
+  autor Usuario? @relation(fields: [autorId], references: [id], onDelete: Restrict)
+  motivo String? @db.VarChar(300)
+  antes Json
+  depois Json
+  beneficioId Int?
+  beneficio BeneficioFidelidade? @relation(fields: [beneficioId], references: [id], onDelete: Restrict)
+  agendamentoId Int?
+  agendamento Agendamento? @relation("MovimentosAgendamento", fields: [agendamentoId], references: [id], onDelete: Restrict)
+  contagemAgendamentoId Int? @unique
+  contagemAgendamento Agendamento? @relation("ContagemAgendamento", fields: [contagemAgendamentoId], references: [id], onDelete: Restrict)
+
+  @@index([fidelidadeId, instante, id])
+  @@map("movimentos_fidelidade")
 }

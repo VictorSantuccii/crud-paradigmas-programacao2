@@ -1,0 +1,8 @@
+import type { useFidelidade } from '@/booking/useFidelidade';
+export function FidelidadeContent({ fidelidade: f }: { fidelidade: ReturnType<typeof useFidelidade> }) {
+  if (f.loading) return <p role="status" className="mt-4 text-sm text-on-surface-variant">Carregando fidelidade…</p>;
+  if (f.error) return <div className="mt-4"><p role="alert" className="text-sm text-error">{f.error}</p><button type="button" onClick={f.recarregar} className="mt-2 min-h-11 text-sm font-bold text-primary">Tentar novamente</button></div>;
+  if (!f.dados) return null;
+  const d = f.dados;
+  return <><div className="mt-4"><strong className="block font-headline-md text-on-surface">{d.progresso} de {d.meta} banhos</strong><span className="text-sm text-on-surface-variant">Para o próximo banho gratuito</span></div><div role="progressbar" aria-label="Progresso da fidelidade" aria-valuenow={d.progresso} aria-valuemin={0} aria-valuemax={d.meta} className="mt-3 h-2 overflow-hidden rounded-full bg-surface-container-high"><div className="h-full rounded-full bg-secondary" style={{ width: `${d.progresso / d.meta * 100}%` }} /></div><p className="mt-3 font-label-md text-on-surface-variant">{d.beneficios.disponiveis} {d.beneficios.disponiveis === 1 ? 'disponível' : 'disponíveis'} • {d.beneficios.reservados} {d.beneficios.reservados === 1 ? 'reservado' : 'reservados'}</p><p className="mt-1 text-xs text-on-surface-variant">{d.beneficios.consumidos} {d.beneficios.consumidos === 1 ? 'utilizado' : 'utilizados'} • Sem validade</p><p className="mt-2 text-xs text-on-surface-variant">Banhos elegíveis pagos. O saldo reúne seus pets; o banho gratuito não conta.</p></>;
+}

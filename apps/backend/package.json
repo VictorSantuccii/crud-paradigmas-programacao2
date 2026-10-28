@@ -15,7 +15,8 @@
     "test": "vitest run",
     "admin:bootstrap": "ts-node src/commands/bootstrapAdmin.ts",
     "auditoria:legado": "ts-node src/commands/auditarLegado.ts",
-    "auditoria:agenda": "ts-node src/commands/auditarAgenda.ts"
+    "auditoria:agenda": "ts-node src/commands/auditarAgenda.ts",
+    "auditoria:fidelidade": "ts-node src/commands/auditarFidelidade.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

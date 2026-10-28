@@ -1,7 +1,9 @@
 import { Agendamento, Prisma, StatusAgendamento } from '@prisma/client';
 import prisma from '../lib/prisma';
+import { cotar, cotacaoPublica, reservar, finalizar, situacaoBeneficio } from './fidelidadePrograma';
+import { preco, booleano } from '../lib/parsers';
 import { Contexto, autorizar, escopo } from '../lib/authorization';
-import { conflict, existeOu404, forbidden } from '../lib/errors';
+import { conflict, existeOu404, forbidden, HttpError } from '../lib/errors';
 import { dataHora, enumeracao, idReferencia, obrigatorio, opcional, parseAtualizacao, parseCriacao } from '../lib/parsers';
 import { Configuracao, instanteLocal, objetoEstrito, somaDias } from '../lib/agenda';
 import { AgendaDb, bloquearAgendamento, relacoesAgendamento, transacaoAgenda } from '../repositories/agendaRepository';
@@ -9,7 +11,7 @@ import { configuracao, disponibilidade, idQuery, janela, textoCurto, validarHora
 
 const campos = { animalId: obrigatorio(idReferencia), servicoId: obrigatorio(idReferencia), funcionarioId: obrigatorio(idReferencia), dataHoraIni: obrigatorio(dataHora), observacoes: opcional(textoCurto) };
 const editaveis = { funcionarioId: campos.funcionarioId, dataHoraIni: campos.dataHoraIni, observacoes: campos.observacoes };
-const formatar = <T extends Agendamento>(r: T) => ({ ...r, precoContratado: r.precoContratado === null ? null : Number(r.precoContratado) });
+const formatar = <T extends Agendamento>(r: T) => ({ ...r, situacaoBeneficio: situacaoBeneficio(r), precoBase: r.precoBase === null ? null : Number(r.precoBase), desconto: Number(r.desconto), precoContratado: r.precoContratado === null ? null : Number(r.precoContratado) });
 const acoes = (r: Agendamento, ctx: Contexto | undefined, config: Configuracao) => {
   const antecedencia = (r.dataHoraIni.getTime() - Date.now()) / 3600000;
   const aberto = r.status === 'AGENDADO';
@@ -36,19 +38,24 @@ export async function list(ctx?: Contexto, query: Record<string, unknown> = {}) 
 }
 export const getById = async (id: number, ctx?: Contexto) => { const r = await buscar(prisma, id, ctx); return { ...formatar(r), ...acoes(r, ctx, await configuracao()) }; };
 function snapshot(r: Agendamento): Prisma.InputJsonObject {
-  return { dataHoraIni: r.dataHoraIni.toISOString(), dataHoraFim: r.dataHoraFim.toISOString(), funcionarioId: r.funcionarioId, status: r.status, precoContratado: r.precoContratado === null ? null : Number(r.precoContratado), duracaoContratadaMin: r.duracaoContratadaMin };
+  return { dataHoraIni: r.dataHoraIni.toISOString(), dataHoraFim: r.dataHoraFim.toISOString(), funcionarioId: r.funcionarioId, status: r.status, precoContratado: r.precoContratado === null ? null : Number(r.precoContratado), duracaoContratadaMin: r.duracaoContratadaMin, precoBase: r.precoBase === null ? null : Number(r.precoBase), desconto: Number(r.desconto), elegivelFidelidade: r.elegivelFidelidade, beneficioId: r.beneficioId, situacaoBeneficio: situacaoBeneficio(r) };
 }
 async function evento(db: AgendaDb, depois: Agendamento, ctx: Contexto, acao: string, antes?: Agendamento, motivo?: string | null) {
   await db.eventoAgendamento.create({ data: { agendamentoId: depois.id, autorId: ctx.id, acao, motivo, ...(antes ? { antes: snapshot(antes) } : {}), depois: snapshot(depois) } });
 }
 export async function create(body: unknown, ctx?: Contexto) {
   autorizar('agendamento', false, ctx);
-  objetoEstrito(body, Object.keys(campos)); const dados = parseCriacao(campos, body);
+  const entrada = objetoEstrito(body, [...Object.keys(campos), 'cotacaoEsperada']); const dados = parseCriacao(campos, entrada);
+  const esperada = entrada.cotacaoEsperada === undefined ? undefined : validarCotacao(entrada.cotacaoEsperada);
   return transacaoAgenda(async db => {
     const animal = await existeOu404(db.animal.findUnique({ where: { id: dados.animalId } }), 'Animal não encontrado.');
     if (ctx!.role === 'CLIENTE' && animal.usuarioId !== ctx!.id) throw forbidden('Animal não pertence à conta.');
     const contrato = await validarHorario(db, dados);
-    const r = await db.agendamento.create({ data: { ...dados, ...contrato, usuarioId: animal.usuarioId, status: 'AGENDADO' }, include: relacoesAgendamento });
+    const cotacao = await cotar(db, animal.usuarioId, dados.servicoId);
+    if (esperada && JSON.stringify(esperada) !== JSON.stringify(cotacaoPublica(cotacao))) throw new HttpError(409, 'A cotação mudou. Confira o resumo e confirme novamente.', 'COTACAO_ALTERADA');
+    const { fidelidadeId: _fidelidade, ...valores } = cotacao;
+    const r = await db.agendamento.create({ data: { ...dados, ...contrato, ...valores, usuarioId: animal.usuarioId, status: 'AGENDADO' }, include: relacoesAgendamento });
+    await reservar(db, r, cotacao, ctx!);
     await evento(db, r, ctx!, 'CRIACAO');
     return formatar(r);
   });
@@ -89,6 +96,7 @@ export async function status(id: number, body: unknown, ctx?: Contexto) {
     if (ctx!.role === 'CLIENTE' && atual.dataHoraIni.getTime() - agora.getTime() < config.antecedenciaCancelamentoHoras * 3600000) throw conflict('Prazo para cancelamento encerrado.');
     if (novo !== 'CANCELADO' && agora < atual.dataHoraFim) throw conflict('Aguarde o término previsto do atendimento.');
     const r = await db.agendamento.update({ where: { id }, data: { status: novo }, include: relacoesAgendamento });
+    await finalizar(db, r, ctx!);
     await evento(db, r, ctx!, novo, atual, motivo);
     return formatar(r);
   });
@@ -102,5 +110,20 @@ export async function disponibilidadeReagendamento(id: number, query: Record<str
     const config = await configuracao(db);
     const r = await disponibilidade(db, { ...range, servicoId: atual.servicoId, duracaoMin: atual.duracaoContratadaMin, ignorarId: id, funcionarioId: query.funcionarioId === undefined ? undefined : idQuery(query.funcionarioId, 'funcionarioId'), antecedenciaHoras: ctx!.role === 'ADMIN' ? 0 : config.antecedenciaReagendamentoHoras });
     return { ...r, preco: atual.precoContratado === null ? null : Number(atual.precoContratado), slots: r.slots.map(s => ({ ...s, preco: atual.precoContratado === null ? null : Number(atual.precoContratado) })) };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+}
+
+function validarCotacao(body: unknown) {
+  const b = objetoEstrito(body, ['precoBase', 'desconto', 'precoContratado', 'elegivelFidelidade', 'beneficioId']);
+  return { precoBase: preco(b.precoBase, 'precoBase'), desconto: preco(b.desconto, 'desconto'), precoContratado: preco(b.precoContratado, 'precoContratado'), elegivelFidelidade: booleano(b.elegivelFidelidade, 'elegivelFidelidade'), beneficioId: b.beneficioId === null ? null : idReferencia(b.beneficioId, 'beneficioId') };
+}
+export async function previa(body: unknown, ctx?: Contexto) {
+  autorizar('agendamento', false, ctx);
+  objetoEstrito(body, Object.keys(campos)); const dados = parseCriacao(campos, body);
+  return prisma.$transaction(async db => {
+    const animal = await existeOu404(db.animal.findUnique({ where: { id: dados.animalId } }), 'Animal não encontrado.');
+    if (ctx!.role === 'CLIENTE' && animal.usuarioId !== ctx!.id) throw forbidden('Animal não pertence à conta.');
+    await validarHorario(db, dados);
+    return cotacaoPublica(await cotar(db, animal.usuarioId, dados.servicoId));
   }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
 }
