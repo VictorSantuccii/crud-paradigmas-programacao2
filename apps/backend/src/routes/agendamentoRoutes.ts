@@ -3,6 +3,7 @@ import controller from '../controllers/agendamentoController';
 const router = Router();
 router.get('/', controller.list);
 router.post('/', controller.create);
+router.post('/previa', controller.previa);
 router.get('/:id', controller.getById);
 router.put('/:id', controller.update);
 router.patch('/:id/status', controller.status);

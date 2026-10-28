@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePrivateApi } from '@/auth/usePrivateApi';
 import { ApiError, mensagemErro } from '@/lib/api';
+import { useFidelidade } from './useFidelidade';
+import { atualizarFidelidade, chaveCotacao, cotacaoDaSelecao } from '@/lib/fidelidade';
 import { chaveSlot, dataDaOperacao, diasDoMes } from '@/lib/booking';
-import type { Agendamento, Categoria, Disponibilidade, PetAgenda, Profissional, ServicoAgenda } from '@/types/agenda';
+import type { Agendamento, Cotacao, Categoria, Disponibilidade, PetAgenda, Profissional, ServicoAgenda } from '@/types/agenda';
 
 export function useBooking(categoria: Categoria) {
   const request = usePrivateApi();
+  const fidelidade = useFidelidade();
   const [params] = useSearchParams();
   const reagendarId = params.get('reagendar');
   const [pets, setPets] = useState<PetAgenda[]>([]);
@@ -28,6 +31,9 @@ export function useBooking(categoria: Categoria) {
   const [sucesso, setSucesso] = useState<Agendamento | null>(null);
   const [tentativa, setTentativa] = useState(0), [versaoHorarios, setVersaoHorarios] = useState(0), [versaoProfissionais, setVersaoProfissionais] = useState(0);
   const enviando = useRef(false);
+  const [respostaCotacao, setRespostaCotacao] = useState<{ chave: string; cotacao: Cotacao } | null>(null);
+  const [cotacaoError, setCotacaoError] = useState('');
+  const [versaoCotacao, setVersaoCotacao] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController(); const signal = controller.signal;
@@ -42,7 +48,7 @@ export function useBooking(categoria: Categoria) {
         if (signal.aborted) return;
         if (atual && (atual.servico.categoria !== categoria || atual.status !== 'AGENDADO')) throw new Error('Este agendamento não pode ser reagendado nesta tela.');
         setPets(animais); setOriginal(atual);
-        setServicos(atual && !catalogo.some(s => s.id === atual.servicoId) ? [...catalogo, { ...atual.servico, descricao: null, preco: atual.precoContratado, duracaoMin: atual.duracaoContratadaMin, ativo: false }] : catalogo);
+        setServicos(atual && !catalogo.some(s => s.id === atual.servicoId) ? [...catalogo, { ...atual.servico, descricao: null, preco: atual.precoContratado, duracaoMin: atual.duracaoContratadaMin, ativo: false, elegivelFidelidade: atual.elegivelFidelidade }] : catalogo);
         setPetId(atual?.animalId ?? null); setServicoId(atual?.servicoId ?? null);
         setFuncionarioId(atual?.funcionarioId ?? null); setObservacoes(atual?.observacoes ?? '');
         setDia(''); setHorario(''); setDisponibilidade(null);
@@ -92,20 +98,35 @@ export function useBooking(categoria: Categoria) {
   };
   const slot = disponibilidade?.slots.find(s => chaveSlot(s) === horario && s.data === dia);
   const pet = pets.find(p => p.id === petId), servico = servicos.find(s => s.id === servicoId);
+  const inicioCotacao = slot?.inicio, profissionalCotacao = slot?.funcionario.id;
+  const chave = chaveCotacao(petId, servicoId, inicioCotacao, profissionalCotacao);
+  const cotacao = cotacaoDaSelecao(respostaCotacao, chave);
+  const cotacaoLoading = !original && !!chave && !cotacao && !cotacaoError;
+  useEffect(() => {
+    const controller = new AbortController(), signal = controller.signal;
+    setRespostaCotacao(null); setCotacaoError('');
+    if (original || !chave || loading || sucesso) return () => controller.abort();
+    void request<Cotacao>('/agendamentos/previa', { method: 'POST', body: { animalId: petId, servicoId, funcionarioId: profissionalCotacao, dataHoraIni: inicioCotacao }, signal })
+      .then(cotacao => { if (!signal.aborted) setRespostaCotacao({ chave, cotacao }); })
+      .catch(error => { if (!signal.aborted) setCotacaoError(mensagemErro(error)); });
+    return () => controller.abort();
+  }, [request, original, chave, petId, servicoId, profissionalCotacao, inicioCotacao, loading, sucesso, versaoCotacao]);
+  const retryCotacao = () => { setRespostaCotacao(null); setCotacaoError(''); setVersaoCotacao(v => v + 1); };
   const refreshHorarios = useCallback(() => setVersaoHorarios(v => v + 1), []);
   async function confirmar() {
-    if (enviando.current || !pet || !servico || !slot || horariosLoading || sucesso) return;
+    if (enviando.current || !pet || !servico || !slot || horariosLoading || sucesso || !original && !cotacao) return;
     enviando.current = true; setPending(true); setSubmitError('');
     try {
-      const body = original ? { funcionarioId: slot.funcionario.id, dataHoraIni: slot.inicio, observacoes: observacoes.trim() || null } : { animalId: pet.id, servicoId: servico.id, funcionarioId: slot.funcionario.id, dataHoraIni: slot.inicio, ...(categoria === 'CONSULTA' ? { observacoes: observacoes.trim() || null } : {}) };
+      const body = original ? { funcionarioId: slot.funcionario.id, dataHoraIni: slot.inicio, observacoes: observacoes.trim() || null } : { cotacaoEsperada: cotacao, animalId: pet.id, servicoId: servico.id, funcionarioId: slot.funcionario.id, dataHoraIni: slot.inicio, ...(categoria === 'CONSULTA' ? { observacoes: observacoes.trim() || null } : {}) };
       const r = await request<Agendamento>(original ? `/agendamentos/${original.id}` : '/agendamentos', { method: original ? 'PUT' : 'POST', body });
-      setSucesso(r);
+      setSucesso(r); atualizarFidelidade();
     } catch (error) {
       setSubmitError(mensagemErro(error));
-      if (error instanceof ApiError && error.status === 409) { setHorario(''); refreshHorarios(); }
+      if (error instanceof ApiError && error.code === 'COTACAO_ALTERADA') { retryCotacao(); atualizarFidelidade(); }
+      else if (error instanceof ApiError && error.status === 409) { setHorario(''); refreshHorarios(); }
     } finally { enviando.current = false; setPending(false); }
   }
-  return { pets, servicos, profissionais, original, reagendando: !!reagendarId, petId, servicoId, funcionarioId, mes, dia, horario, observacoes, disponibilidade, pet, servico, slot, loading, error, horariosLoading, horariosError, profissionaisLoading, profissionaisError, pending, submitError, sucesso,
+  return { fidelidade, cotacao, cotacaoLoading, cotacaoError, retryCotacao, pets, servicos, profissionais, original, reagendando: !!reagendarId, petId, servicoId, funcionarioId, mes, dia, horario, observacoes, disponibilidade, pet, servico, slot, loading, error, horariosLoading, horariosError, profissionaisLoading, profissionaisError, pending, submitError, sucesso,
     trocarServico, trocarProfissional, trocarMes, trocarDia, setHorario: selecionarHorario, setObservacoes, setPetId, confirmar, refreshHorarios,
     retry: () => setTentativa(v => v + 1), retryProfissionais: () => setVersaoProfissionais(v => v + 1),
   };

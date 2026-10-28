@@ -2,7 +2,7 @@
 
 Sistema acadêmico de gestão de pet shop com React/Vite, Express, Prisma, PostgreSQL e sessões Redis.
 
-**Estado atual:** fases 1, 2 e 3 implementadas: autenticação e autorização por papel/titularidade; perfil, endereços e pets persistidos; catálogo, disponibilidade e agendamento real com proteção contra concorrência. As telas de serviços e consultas usam a API, e o perfil apresenta próximos atendimentos e histórico.
+**Estado atual:** fases 1–4 implementadas: autenticação e autorização por papel/titularidade; perfil, endereços e pets persistidos; catálogo, disponibilidade e agendamento real com proteção contra concorrência. As telas de serviços e consultas usam a API, e o perfil apresenta agenda, histórico e fidelidade automática. Banhos elegíveis concluídos geram benefícios, com reserva, devolução e consumo auditados.
 
 | Área | Situação |
 | --- | --- |
@@ -11,7 +11,8 @@ Sistema acadêmico de gestão de pet shop com React/Vite, Express, Prisma, Postg
 | Serviços e consultas | Catálogo ativo, habilitação explícita de profissionais, calendário navegável e confirmação persistida |
 | Agenda e histórico | Contrato de preço/duração, cancelamento, reagendamento, estados e auditoria transacional |
 | Administração | APIs ADMIN para catálogo, equipe, expediente e bloqueios; painel visual fica para fase futura |
-| Fidelidade, pagamentos e prontuário | Fidelidade tem cadastro/CRUD, sem contabilização automática; demais fluxos ficam para fases seguintes |
+| Fidelidade | A cada oito banhos elegíveis pagos e concluídos, um gratuito; saldo por tutor, contratos, reserva/consumo/devolução e ajustes auditados |
+| Pagamentos e prontuário | Ficam para fases seguintes |
 
 A agenda inicia de segunda a sexta, 09–12h e 13–18h, no fuso America/Sao_Paulo, com slots de 30 minutos e antecedências de 24h. Preço e duração são fixos por serviço e ficam preservados na reserva. PostgreSQL impede sobreposição por profissional com exclusão GiST (`btree_gist`). Catálogo e equipe começam sem dados demonstrativos: um ADMIN deve classificá-los, ativá-los e configurar habilitações.
 
@@ -60,7 +61,7 @@ pnpm --filter @petshop/backend prisma:generate
 pnpm --filter @petshop/backend exec prisma migrate deploy
 ```
 
-Em uma base existente, execute primeiro `pnpm --filter @petshop/backend auditoria:agenda` e siga [as instruções de migração](docs/agenda-operacao.md). A migração aborta intervalos inválidos ou sobrepostos, sem excluir reservas. Serviços e profissionais legados começam inativos; preço histórico desconhecido permanece nulo.
+Em uma base existente, execute primeiro `pnpm --filter @petshop/backend auditoria:agenda` e `pnpm --filter @petshop/backend auditoria:fidelidade` e siga [as instruções de migração](docs/agenda-operacao.md). A migração aborta intervalos inválidos ou sobrepostos, sem excluir reservas. Serviços e profissionais legados começam inativos; preço histórico desconhecido permanece nulo.
 
 O arquivo `.env` controla a conexão da API com PostgreSQL/Redis e a origem do frontend. O arquivo `apps/frontend/.env` define a URL da API e as variáveis públicas do Firebase para o navegador. Configure as credenciais de serviço do Firebase no `.env` para validar tokens Google no backend. Consulte [docs/google-auth.md](docs/google-auth.md) para detalhes.
 
@@ -114,16 +115,26 @@ Todas as rotas de recursos usam JSON. A API está documentada no Swagger em `/ap
 | Usuários | `/usuarios` e `/usuarios/:id` — listar, criar, consultar, atualizar e remover |
 | Endereços | `/enderecos` e `/enderecos/:id` |
 | Animais | `/animais` e `/animais/:id` |
-| Fidelidades | `/fidelidades` e `/fidelidades/:id` |
+| Fidelidades | `GET /fidelidades`, `GET /fidelidades/me`, `GET /fidelidades/:id`, `POST /fidelidades/:id/ajustes` (ADMIN) |
 | Planos | `/planos` e `/planos/:id` |
 | Assinaturas | `/assinaturas` e `/assinaturas/:id` |
 | Serviços | `/servicos` e `/servicos/:id` |
 | Funcionários | `/funcionarios` e `/funcionarios/:id` |
-| Agendamentos | `GET/POST /agendamentos`, `GET/PUT /agendamentos/:id`, `PATCH /agendamentos/:id/status` |
+| Agendamentos | `POST /agendamentos/previa`, `GET/POST /agendamentos`, `GET/PUT /agendamentos/:id`, `PATCH /agendamentos/:id/status` |
 | Disponibilidade | `GET /disponibilidade`, `GET /agendamentos/:id/disponibilidade` |
 | Configuração e bloqueios (ADMIN) | `GET/PUT /configuracao-agenda`, `GET/POST /bloqueios-agenda`, `DELETE /bloqueios-agenda/:id` |
 
-Para os recursos CRUD, exceto agendamentos, `GET` e `POST` são oferecidos na coleção; `GET`, `PUT` e `DELETE` são oferecidos na rota com `:id`. Consulte o Swagger para campos obrigatórios e formatos de cada entidade.
+Para os recursos CRUD, exceto agendamentos e fidelidade, `GET` e `POST` são oferecidos na coleção; `GET`, `PUT` e `DELETE` são oferecidos na rota com `:id`. Consulte o Swagger para campos obrigatórios e formatos de cada entidade.
+
+## Fidelidade automática
+
+Cada oito banhos elegíveis pagos e concluídos geram um banho gratuito. O saldo reúne os pets do tutor; benefícios acumulam sem validade e são reservados no próximo novo agendamento elegível, do mais antigo ao mais recente. Concluir consome; cancelar ou faltar devolve; reagendar preserva a reserva. O gratuito não conta para o próximo ciclo. Consultas não participam. ADMIN habilita explicitamente serviços BANHO_TOSA; combos habilitados recebem desconto integral.
+
+O resumo usa `POST /agendamentos/previa` e envia `cotacaoEsperada` na criação. Divergência retorna `409 COTACAO_ALTERADA`, preserva o formulário e exige nova confirmação. Clientes antigos podem omitir a cotação: o servidor define o contrato efetivo. Preço base, desconto, total e elegibilidade permanecem no contrato mesmo após mudanças no catálogo.
+
+As mutações genéricas `POST /fidelidades`, `PUT /fidelidades/:id` e `DELETE /fidelidades/:id` foram removidas. Ajustes exigem ADMIN, progresso final 0–7, variação inteira de benefícios disponíveis e motivo até 300 caracteres. Contadores legados fora de 0–7 fazem a migração abortar; contador/flag válidos são importados com auditoria, sem recontar históricos ou inferir elegibilidade. Registros auditáveis impedem exclusão, inclusive pelo usuário.
+
+Veja [contratos, permissões, modelo e migração da fase 4](docs/fase4-implementacao.md) e [validação com capturas](docs/fase4-validacao.md).
 
 ## Modelo e integridade da agenda
 
@@ -137,7 +148,6 @@ A suíte usa PostgreSQL/Redis isolados, testa migrações vazias e legadas, disp
 
 ## Próximas fases
 
-- Automatizar fidelidade a partir de atendimentos concluídos e aplicar benefícios conforme a política definida.
 - Criar painel de equipe e administração sobre as APIs autorizadas.
 - Evoluir pagamentos e prontuário conforme o escopo aprovado.
 

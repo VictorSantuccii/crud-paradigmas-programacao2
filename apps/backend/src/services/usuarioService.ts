@@ -55,6 +55,7 @@ export const remove = async (id: number, ctx?: Contexto) => {
   autorizar('usuario', false, ctx);
   const user = await buscar(id);
   const counts = await Promise.all([agendamentoRepository.countByUsuario(id), agendamentoRepository.countByDonoDoAnimal(id), assinaturaRepository.countByUsuario(id)]);
+  if (await prisma.movimentoFidelidade.count({ where: { OR: [{ fidelidadeId: user.fidelidadeId }, { autorId: id }] } }) || await prisma.beneficioFidelidade.count({ where: { fidelidadeId: user.fidelidadeId } })) throw conflict('Usuário com histórico de fidelidade não pode ser removido.');
   if (counts.some(Boolean)) throw conflict('Usuário com agendamentos ou assinaturas não pode ser removido.');
   await usuarioRepository.removerComFidelidade(id, user.fidelidadeId);
 };

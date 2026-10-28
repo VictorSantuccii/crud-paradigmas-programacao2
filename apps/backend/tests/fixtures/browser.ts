@@ -19,7 +19,7 @@ async function main() {
     await redis.set('sessao:fase3-admin', JSON.stringify({ id: admin.id }), { EX: 14400 });
     const pet = await db.animal.findFirst({ where: { usuarioId: tutor.id } });
     const banho = await db.servico.findFirst({ where: { nome: 'Banho de Teste' } });
-    if (pet && banho && !await db.agendamento.findFirst({ where: { usuarioId: tutor.id, dataHoraIni: new Date('2026-10-01T12:00Z') } })) await db.agendamento.create({ data: { usuarioId: tutor.id, animalId: pet.id, servicoId: banho.id, funcionarioId: profissional.id, dataHoraIni: new Date('2026-10-01T12:00Z'), dataHoraFim: new Date('2026-10-01T12:45Z'), duracaoContratadaMin: 45, precoContratado: 70 } });
+    if (pet && banho && !await db.agendamento.findFirst({ where: { usuarioId: tutor.id, dataHoraIni: new Date('2026-10-01T12:00Z') } })) await db.agendamento.create({ data: { usuarioId: tutor.id, animalId: pet.id, servicoId: banho.id, funcionarioId: profissional.id, dataHoraIni: new Date('2026-10-01T12:00Z'), dataHoraFim: new Date('2026-10-01T12:45Z'), duracaoContratadaMin: 45, precoBase: 70, precoContratado: 70 } });
     console.log('Fixture isolada pronta: fase3-ui@example.com; cookies fase3-ui e fase3-admin.');
   } finally { await db.$disconnect(); if (redis.isOpen) await redis.quit(); }
 }

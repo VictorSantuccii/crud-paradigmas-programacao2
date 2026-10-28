@@ -63,7 +63,7 @@ describe('HTTP identidade e autorização', () => {
     const otherAddr = await prisma.endereco.findFirstOrThrow({ where: { usuarioId: bId } });
     expect((await request(app).put('/auth/me').set('Cookie', a).send({ endereco: { ...address, id: otherAddr.id } })).status).toBe(403);
     for (const path of ['usuarios', 'funcionarios', 'planos', 'assinaturas']) expect((await request(app).get(`/${path}`).set('Cookie', a)).status).toBe(403);
-    expect((await request(app).post('/fidelidades').set('Cookie', a).send({})).status).toBe(403);
+    expect((await request(app).post('/fidelidades').set('Cookie', a).send({})).status).toBe(404);
   });
   it('Google cria apenas sessão temporária retomável; conclusão emite sessão normal', async () => {
     const start = await request(app).post('/auth/google').send({ idToken: 'verified-by-firebase-mock', nome: 'Fake', email: 'fake@example.com' });

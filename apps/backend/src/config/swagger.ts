@@ -1,3 +1,4 @@
+import { cotacaoSchema, fidelidadeSchemas, fidelidadePaths } from "./fidelidadeSwagger";
 import { agendaSchemas, agendaPaths } from "./agendaSwagger";
 import swaggerJSDoc from "swagger-jsdoc";
 
@@ -96,6 +97,7 @@ const entidades: Record<string, Entidade> = {
     campos: {
       categoria: { type: "string", enum: ["BANHO_TOSA", "CONSULTA"], description: "Obrigatória em novos serviços; legado permanece sem classificação até configuração explícita." },
       ativo: { type: "boolean", default: false },
+      elegivelFidelidade: { type: "boolean", default: false, description: "Somente ADMIN habilita explicitamente em BANHO_TOSA. Gratuidade integral do serviço, inclusive combo explicitamente habilitado." },
       descricao: textoOpcional,
       duracaoMin: { type: "integer", minimum: 1, example: 60 },
       preco,
@@ -117,7 +119,8 @@ const entidades: Record<string, Entidade> = {
   Agendamento: {
     campos: { dataHoraIni: dataHora, animalId: idReferencia, servicoId: idReferencia, funcionarioId: idReferencia, observacoes: { type: "string", nullable: true, maxLength: 300 } },
     obrigatorios: ["dataHoraIni", "animalId", "servicoId", "funcionarioId"],
-    somenteSaida: { dataHoraFim: dataHora, usuarioId: idReferencia, precoContratado: { ...preco, nullable: true }, duracaoContratadaMin: { type: "number", minimum: 0, exclusiveMinimum: true }, status: { type: "string", enum: ["AGENDADO", "CONCLUIDO", "CANCELADO", "NAO_COMPARECEU"] }, animal: { type: "object", properties: { id, nome: { type: "string" }, especie: { type: "string" } } }, servico: { type: "object", properties: { id, nome: { type: "string" }, categoria: { type: "string", nullable: true } } }, funcionario: { $ref: "#/components/schemas/ProfissionalPublico" }, podeCancelar: { type: "boolean" }, podeReagendar: { type: "boolean" } },
+    somenteCriacao: { cotacaoEsperada: cotacaoSchema },
+    somenteSaida: { precoBase: { ...preco, nullable: true }, desconto: preco, elegivelFidelidade: { type: "boolean" }, beneficioId: { ...idReferencia, nullable: true }, situacaoBeneficio: { type: "string", nullable: true, enum: ["RESERVADO", "CONSUMIDO", "DEVOLVIDO"], description: "Situação neste contrato, independente da reutilização posterior do benefício devolvido." }, dataHoraFim: dataHora, usuarioId: idReferencia, precoContratado: { ...preco, nullable: true }, duracaoContratadaMin: { type: "number", minimum: 0, exclusiveMinimum: true }, status: { type: "string", enum: ["AGENDADO", "CONCLUIDO", "CANCELADO", "NAO_COMPARECEU"] }, animal: { type: "object", properties: { id, nome: { type: "string" }, especie: { type: "string" } } }, servico: { type: "object", properties: { id, nome: { type: "string" }, categoria: { type: "string", nullable: true } } }, funcionario: { $ref: "#/components/schemas/ProfissionalPublico" }, podeCancelar: { type: "boolean" }, podeReagendar: { type: "boolean" } },
   },
 };
 
@@ -170,7 +173,7 @@ const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
     title: "API Pet Shop",
-    version: "3.0.0",
+    version: "4.0.0",
     description:
       "API REST de usuários, animais, planos, assinaturas, serviços, funcionários e agendamentos com Express e Prisma.",
   },
@@ -223,6 +226,8 @@ const swaggerDefinition = {
       },
       ...schemas,
       ...agendaSchemas,
+      AgendamentoPreviaInput: { type: "object", additionalProperties: false, required: entidades.Agendamento.obrigatorios, properties: entidades.Agendamento.campos },
+      ...fidelidadeSchemas,
     },
   },
 };
@@ -233,7 +238,10 @@ const swaggerOptions = {
 };
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions) as { paths: Record<string, unknown> };
-Object.assign(swaggerSpec.paths, agendaPaths);
+Object.assign(swaggerSpec.paths, agendaPaths, fidelidadePaths);
+agendaPaths['/agendamentos'].post.description += ' Fidelidade: reserva automaticamente o benefício disponível mais antigo em novo agendamento elegível. Envie cotacaoEsperada obtida na prévia para detectar mudanças (409 COTACAO_ALTERADA), sem efeitos. Omitir cotação mantém compatibilidade: servidor determina o contrato efetivo. Preço base, desconto, elegibilidade e benefício são imutáveis e auditados.';
+agendaPaths['/agendamentos/{id}'].put.description += ' Preserva preço e reserva originais, sem aplicar novos benefícios.';
+agendaPaths['/agendamentos/{id}/status'].patch.description += ' Concluir elegível pago conta uma vez; o oitavo emite um benefício. Gratuito consome reserva sem contar; cancelamento/falta devolvem benefício e preservam contrato histórico. Nenhum efeito retroativo.';
 const catalogoGet = (swaggerSpec.paths['/servicos'] as Record<string, Record<string, unknown>>).get;
 catalogoGet.description = 'Catálogo público somente de serviços ativos classificados; preço e duração fixos por serviço. ADMIN consulta inativos em /servicos/administracao.';
 catalogoGet.parameters = [{ in: 'query', name: 'categoria', schema: { type: 'string', enum: ['BANHO_TOSA', 'CONSULTA'] } }];

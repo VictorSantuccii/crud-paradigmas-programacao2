@@ -8,6 +8,6 @@ it('documenta reserva estrita, reagendamento, transição substituta do DELETE e
   expect(spec.paths['/disponibilidade'].get.security).toEqual([]);
   expect(spec.paths['/servicos/{id}/profissionais'].get.security).toEqual([]);
   const input = spec.components.schemas.AgendamentoInput.properties;
-  expect(Object.keys(input).sort()).toEqual(['animalId', 'dataHoraIni', 'funcionarioId', 'observacoes', 'servicoId']);
+  expect(Object.keys(input).sort()).toEqual(['animalId', 'cotacaoEsperada', 'dataHoraIni', 'funcionarioId', 'observacoes', 'servicoId']);
   expect(Object.keys(spec.components.schemas.AgendamentoUpdate.properties).sort()).toEqual(['dataHoraIni', 'funcionarioId', 'observacoes']);
 });

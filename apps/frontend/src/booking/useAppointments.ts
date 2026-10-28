@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrivateApi } from '@/auth/usePrivateApi';
+import { atualizarFidelidade } from '@/lib/fidelidade';
 import { mensagemErro } from '@/lib/api';
 import type { Agendamento } from '@/types/agenda';
 export function useAppointments() {
@@ -20,7 +21,7 @@ export function useAppointments() {
     cancelando.current = true; setPending(id); setError(''); setNotice('');
     try {
       await request(`/agendamentos/${id}/status`, { method: 'PATCH', body: { status: 'CANCELADO', motivo: motivo.trim() || null } });
-      setNotice('Agendamento cancelado.'); await load();
+      atualizarFidelidade(); setNotice('Agendamento cancelado.'); await load();
     } catch (error) { setError(mensagemErro(error)); }
     finally { cancelando.current = false; setPending(null); }
   }
