@@ -153,23 +153,18 @@ Somente o ADMIN inicial e a configuração inicial da agenda são preparados dir
 
 **Execute a suíte principal e os E2E em sequência**, pois ambas recriam dados de `petshop_test` e limpam Redis `/15`. Use os mesmos `TEST_DATABASE_URL`/`TEST_REDIS_URL` para personalizar os dois comandos. Os E2E verificam o nome exato do banco e o índice Redis antes da limpeza.
 
-### CI de Pull Requests
+### Relatórios de testes locais
 
-O workflow [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) executa na abertura, reabertura e atualização de PRs, em pushes para `main` e manualmente pelo GitHub Actions. Usa Node 24, pnpm definido no `packageManager` e instalação com `--frozen-lockfile`. Não precisa de secrets Firebase.
+Os testes são executados localmente pelos comandos acima. Esta entrega não inclui um workflow de CI no GitHub Actions.
 
-Dois jobs executam independentemente:
-
-1. **Lint e TypeScript**: gera Prisma Client, roda `pnpm lint` e `pnpm typecheck` para backend, frontend e testes.
-2. **Testes e E2E HTTP**: inicia PostgreSQL 16 e Redis 7 isolados com health checks, gera Prisma Client, aplica as migrações versionadas e executa a suíte principal e os E2E em sequência. O comando E2E também valida o build do backend.
-
-Os relatórios JUnit ficam no artefato `test-results` por sete dias, inclusive quando algum teste falha. Localmente, é possível gerá-los com as mesmas opções do CI:
+Para gerar relatórios JUnit localmente:
 
 ```bash
 pnpm --filter @petshop/backend test --reporter=default --reporter=junit --outputFile.junit=test-results/integration.xml
 pnpm --filter @petshop/backend test:e2e --reporter=default --reporter=junit --outputFile.junit=test-results/e2e.xml
 ```
 
-Os arquivos são escritos em `apps/backend/test-results/` e ignorados pelo Git. Para exigir esses checks antes do merge, configure as regras de proteção da branch no GitHub; a criação do workflow não altera essas regras.
+Os arquivos são escritos em `apps/backend/test-results/` e ignorados pelo Git.
 
 Os relatórios das [fases 3](../fase3-validacao.md) e [4](../fase4-validacao.md) registram as verificações e o aceite visual dessas entregas. As fixtures de navegador em `apps/backend/tests/fixtures/` também exigem bancos isolados.
 
