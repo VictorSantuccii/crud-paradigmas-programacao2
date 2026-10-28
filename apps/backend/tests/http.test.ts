@@ -175,7 +175,7 @@ describe('fase 2: perfil, endereços e pets persistidos', () => {
       const res = await request(app).post('/animais').set('Cookie', a).send(body);
       expect(res.status).toBe(400); expect(res.body.fieldErrors[field]).toBeTruthy();
     }
-    for (const [field, value] of [['nome', ' '], ['especie', null], ['idade', -1], ['idade', 1.5], ['idade', '2'], ['porte', 'GIGANTE'], ['raca', 10], ['raca', ' ']]) {
+    for (const [field, value] of [['nome', ' '], ['especie', null], ['idade', -1], ['idade', 1.5], ['idade', '2'], ['porte', 'GIGANTE'], ['raca', 10], ['raca', ' ']] as const) {
       const res = await request(app).post('/animais').set('Cookie', a).send({ ...valid, [field]: value });
       expect(res.status).toBe(400); expect(res.body.fieldErrors[field as string]).toBeTruthy();
     }
@@ -184,10 +184,12 @@ describe('fase 2: perfil, endereços e pets persistidos', () => {
     expect((await request(app).delete(`/animais/${animalB}`).set('Cookie', b)).status).toBe(409);
     const pet = await prisma.animal.create({ data: { nome: 'Concorrente', especie: 'Cão', idade: 1, porte: 'GRANDE', usuarioId: bId } });
     const remove = animalRepository.remove;
-    const spy = vi.spyOn(animalRepository, 'remove').mockImplementationOnce(async (id, scope) => {
+    const removerComVinculoConcorrente = async (id: number, scope?: Parameters<typeof remove>[1]) => {
       await prisma.agendamento.create({ data: { animalId: id, usuarioId: bId, servicoId: serviceId, funcionarioId: employeeId, duracaoContratadaMin: 60, dataHoraIni: new Date('2026-12-01T12:00:00Z'), dataHoraFim: new Date('2026-12-01T13:00:00Z') } });
       return remove(id, scope);
-    });
+    };
+    // O serviço usa somente await; a simulação não precisa dos métodos de relação do PrismaPromise.
+    const spy = vi.spyOn(animalRepository, 'remove').mockImplementationOnce(removerComVinculoConcorrente as unknown as typeof remove);
     try {
       const res = await request(app).delete(`/animais/${pet.id}`).set('Cookie', b);
       expect(res.status).toBe(409); expect(res.body.message).toMatch(/agendamentos/);

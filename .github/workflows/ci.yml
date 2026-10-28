@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint e TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prisma:generate
+      - name: Lint (backend, frontend e testes)
+        run: pnpm lint
+      - name: Typecheck (backend, frontend e testes)
+        run: pnpm typecheck
+
+  tests:
+    name: Testes e E2E HTTP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://petshop:test_password@localhost:25432/petshop_test
+      REDIS_URL: redis://localhost:26379/15
+      TEST_DATABASE_URL: postgresql://petshop:test_password@localhost:25432/petshop_test
+      TEST_REDIS_URL: redis://localhost:26379/15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: petshop_test
+          POSTGRES_USER: petshop
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 25432:5432
+        options: >-
+          --health-cmd "pg_isready -U petshop -d petshop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 26379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prisma:generate
+      - name: Aplicar migrações no PostgreSQL isolado
+        run: pnpm --filter @petshop/backend exec prisma migrate deploy
+      # As suítes limpam os mesmos dados e precisam executar em sequência.
+      - name: Testes unitários, integração e migrações
+        run: pnpm --filter @petshop/backend test --reporter=default --reporter=junit --outputFile.junit=test-results/integration.xml
+      - name: E2E HTTP com build e servidor real
+        run: pnpm --filter @petshop/backend test:e2e --reporter=default --reporter=junit --outputFile.junit=test-results/e2e.xml
+      - name: Guardar relatórios de testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: apps/backend/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
