@@ -1,6 +1,6 @@
 # Operação da agenda — fase 3
 
-A API e as telas de serviços, consultas e perfil usam reservas persistidas. Pagamentos, prontuário, fidelidade automática e painel de administração ficam para as fases seguintes.
+A API e as telas de serviços, consultas e perfil usam reservas persistidas. A fidelidade automática foi implementada na fase 4; consulte os [contratos e regras de fidelidade](fase4-implementacao.md) para os campos de prévia, cotação e benefício adicionados ao agendamento. Pagamentos, prontuário e painel visual de administração ficam para fases seguintes.
 
 ## Preparar e migrar uma instalação
 
