@@ -14,7 +14,9 @@ it('preserva status, código e erros por campo', async () => {
 it('diferencia falha de rede de 401 e suporta resposta sem corpo', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
   const error = await api('/auth/me').catch(e => e);
-  expect(error).toBeInstanceOf(ApiError); expect(error.status).toBe(0);
+  expect(error).toBeInstanceOf(ApiError);
+  if (!(error instanceof ApiError)) throw new Error('Era esperado ApiError.');
+  expect(error.status).toBe(0);
   vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 204 })));
   expect(await api('/auth/logout', { method: 'POST' })).toBeUndefined();
 });
