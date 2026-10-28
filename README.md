@@ -1,54 +1,106 @@
-# PetExpress
+<p align="center">
+  <img src="docs/assets/logo-petexpress.png" alt="PetExpress — logo com patinha azul" width="360" />
+</p>
 
-Sistema acadêmico de gestão de pet shop com React/Vite, Express, Prisma, PostgreSQL e sessões Redis.
+<h1 align="center">PetExpress</h1>
 
-**Estado atual:** fases 1–4 implementadas: autenticação e autorização por papel/titularidade; perfil, endereços e pets persistidos; catálogo, disponibilidade e agendamento real com proteção contra concorrência. As telas de serviços e consultas usam a API, e o perfil apresenta agenda, histórico e fidelidade automática. Banhos elegíveis concluídos geram benefícios, com reserva, devolução e consumo auditados.
+<p align="center">
+  Cuidado com os pets, organização para os tutores.<br />
+  Sistema acadêmico de gestão de pet shop para a disciplina de Paradigmas de Programação II.
+</p>
 
-| Área | Situação |
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="Licença MIT" /></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/pnpm-10.11.0-F69220?logo=pnpm&amp;logoColor=white" alt="pnpm 10.11.0" /></a>
+  <a href="apps/frontend/package.json"><img src="https://img.shields.io/badge/React-19-149ECA?logo=react&amp;logoColor=white" alt="React 19" /></a>
+  <a href="apps/frontend/package.json"><img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript 5" /></a>
+  <a href="docker-compose.yml"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&amp;logoColor=white" alt="PostgreSQL 16" /></a>
+  <a href="docker-compose.yml"><img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&amp;logoColor=white" alt="Redis 7" /></a>
+</p>
+
+<p align="center">
+  <a href="#sobre-o-projeto">Sobre</a> ·
+  <a href="#telas-do-projeto">Telas</a> ·
+  <a href="#como-executar">Como executar</a> ·
+  <a href="docs/README.md">Documentação</a> ·
+  <a href="LICENSE">Licença</a>
+</p>
+
+## Sobre o projeto
+
+O PetExpress conecta cadastro de tutores e pets, agendamento de serviços e consultas, agenda e fidelidade em uma aplicação web responsiva. Os dados são persistidos em PostgreSQL, com autenticação por sessão em Redis e controle de acesso por papel e titularidade.
+
+### Funcionalidades
+
+| Área | O que já está implementado |
 | --- | --- |
-| Cadastro, login e onboarding Google | Sessões HttpOnly em Redis, completude de perfil, CPF/e-mail validados e normalizados |
-| Perfil, endereços e pets | Consulta, cadastro, edição e remoção com titularidade, raça opcional e proteção de vínculos |
-| Serviços e consultas | Catálogo ativo, habilitação explícita de profissionais, calendário navegável e confirmação persistida |
-| Agenda e histórico | Contrato de preço/duração, cancelamento, reagendamento, estados e auditoria transacional |
-| Administração | APIs ADMIN para catálogo, equipe, expediente e bloqueios; painel visual fica para fase futura |
-| Fidelidade | A cada oito banhos elegíveis pagos e concluídos, um gratuito; saldo por tutor, contratos, reserva/consumo/devolução e ajustes auditados |
-| Pagamentos e prontuário | Ficam para fases seguintes |
+| Autenticação | Cadastro, login com senha, Google via Firebase e conclusão de perfil |
+| Perfil do tutor | Edição de dados pessoais e gerenciamento de endereços |
+| Pets | Cadastro, consulta, edição e remoção, com validação de titularidade |
+| Serviços e consultas | Catálogo da API, profissionais habilitados, calendário e horários disponíveis |
+| Agendamentos | Criação, cancelamento, reagendamento, histórico e auditoria transacional |
+| Fidelidade | A cada oito banhos elegíveis pagos e concluídos, um gratuito; saldo compartilhado entre os pets do tutor |
+| Administração | APIs para catálogo, equipe, expediente, bloqueios e ajustes de fidelidade |
 
-A agenda inicia de segunda a sexta, 09–12h e 13–18h, no fuso America/Sao_Paulo, com slots de 30 minutos e antecedências de 24h. Preço e duração são fixos por serviço e ficam preservados na reserva. PostgreSQL impede sobreposição por profissional com exclusão GiST (`btree_gist`). Catálogo e equipe começam sem dados demonstrativos: um ADMIN deve classificá-los, ativá-los e configurar habilitações.
+**Escopo atual:** fases 1–4 implementadas. O painel visual de administração, pagamentos e prontuário são próximos passos. A página inicial ainda contém conteúdo ilustrativo; os fluxos de cadastro, perfil e agendamento usam dados da API.
 
-Veja [operação, políticas, contratos e migração da agenda](docs/agenda-operacao.md), incluindo auditoria de legado e configuração inicial. `DELETE /agendamentos/:id` foi retirado: use `PATCH /agendamentos/:id/status` para cancelar.
+## Telas do projeto
 
-## Tecnologias e organização
+### Página inicial
 
-- **Monorepo:** pnpm workspaces e Turborepo.
-- **Frontend:** React 19, TypeScript, Vite, React Router e Tailwind CSS 4.
-- **Backend:** Node.js, Express, TypeScript e Prisma.
-- **Persistência:** PostgreSQL 16.
-- **Sessões:** Redis 7.
-- **Autenticação Google:** Firebase Authentication no navegador e Firebase Admin na API.
+![Página inicial do PetExpress com apresentação e atalhos para agendamento](docs/capturas/inicio-desktop.png)
 
-```text
-apps/
-  backend/       API Express, serviços, repositórios, rotas e schema Prisma
-  frontend/      aplicação React/Vite
-  frontend-html/ páginas HTML de referência/protótipo
-packages/
-  eslint-config/ configurações compartilhadas do ESLint
-  tsconfig/      configurações compartilhadas do TypeScript
-docs/
-  google-auth.md instruções de configuração da autenticação Google
-```
+### Perfil, pets e fidelidade
 
-## Como executar localmente
+![Perfil do tutor com pets cadastrados, dados pessoais e saldo de fidelidade](docs/capturas/fase4/perfil-desktop.png)
+
+<details>
+<summary><strong>Ver serviços, consultas e versão mobile</strong></summary>
+
+#### Agendamento de serviços
+
+Escolha do pet, serviço, profissional e horário, com prévia do valor e aplicação do benefício.
+
+![Agendamento de serviço com calendário e resumo do desconto de fidelidade](docs/capturas/fase4/servicos-previa-desktop.png)
+
+#### Consultas veterinárias
+
+![Agendamento de consulta com seleção de profissional e resumo de valores](docs/capturas/fase4/consulta-desktop.png)
+
+#### Experiência no celular
+
+<p align="center">
+  <img src="docs/capturas/fase4/consulta-mobile.png" alt="Agendamento de consulta no celular" width="280" />
+  <img src="docs/capturas/fase4/perfil-consumo-mobile.png" alt="Perfil e fidelidade no celular" width="280" />
+</p>
+
+</details>
+
+As capturas dos fluxos autenticados usam dados de teste. Veja a [galeria e a origem das imagens](docs/capturas/README.md).
+
+## Tecnologias
+
+| Camada | Ferramentas |
+| --- | --- |
+| Interface | React 19, TypeScript, Vite 6, React Router 7 e Tailwind CSS 4 |
+| API | Node.js, Express 4 e TypeScript |
+| Persistência | Prisma 5 e PostgreSQL 16 |
+| Sessões | Redis 7 e cookies HttpOnly |
+| Login Google | Firebase Authentication e Firebase Admin |
+| Documentação da API | Swagger / OpenAPI |
+| Qualidade | Vitest, Supertest, ESLint e TypeScript |
+| Monorepo | pnpm workspaces e Turborepo |
+| Infraestrutura local | Docker Compose |
+
+## Como executar
 
 ### Pré-requisitos
 
-- Node.js 22 ou compatível com as dependências do projeto.
-- pnpm 10.11.0 (ou Corepack habilitado).
-- Docker e Docker Compose para PostgreSQL e Redis.
-- Projeto Firebase configurado se quiser testar login com Google.
+- Node.js 22 e pnpm 10.11.0.
+- Docker com Docker Compose.
+- Firebase configurado para testar o login Google; o login com senha pode ser usado sem essa integração.
 
-### Instalação
+### Instalação em uma base nova
 
 Na raiz do repositório:
 
@@ -56,99 +108,69 @@ Na raiz do repositório:
 pnpm install
 cp .env.example .env
 cp apps/frontend/.env.example apps/frontend/.env
+```
+
+Confira as conexões no `.env` e deixe `FIREBASE_SERVICE_ACCOUNT_JSON` vazio enquanto não configurar o login Google. Os padrões do Compose são PostgreSQL em `15432` e Redis em `16379`.
+
+```bash
 docker compose up -d postgres redis
 pnpm --filter @petshop/backend prisma:generate
 pnpm --filter @petshop/backend exec prisma migrate deploy
 ```
 
-Em uma base existente, execute primeiro `pnpm --filter @petshop/backend auditoria:agenda` e `pnpm --filter @petshop/backend auditoria:fidelidade` e siga [as instruções de migração](docs/agenda-operacao.md). A migração aborta intervalos inválidos ou sobrepostos, sem excluir reservas. Serviços e profissionais legados começam inativos; preço histórico desconhecido permanece nulo.
-
-O arquivo `.env` controla a conexão da API com PostgreSQL/Redis e a origem do frontend. O arquivo `apps/frontend/.env` define a URL da API e as variáveis públicas do Firebase para o navegador. Configure as credenciais de serviço do Firebase no `.env` para validar tokens Google no backend. Consulte [docs/google-auth.md](docs/google-auth.md) para detalhes.
-
-Para iniciar a API e o frontend em terminais separados:
+Inicie em dois terminais, a partir da raiz:
 
 ```bash
+# Terminal 1 — API
 pnpm --filter @petshop/backend dev
+```
+
+```bash
+# Terminal 2 — interface
 pnpm --filter @petshop/frontend dev
 ```
 
-URLs locais padrão:
-
-- Frontend: <http://localhost:5173>
-- API: <http://localhost:3000>
-- Swagger: <http://localhost:3000/api-docs>
-- Health check: <http://localhost:3000/>
-
-O backend espera que Redis esteja acessível durante a inicialização. O Compose também oferece um serviço `backend`; o fluxo acima permite executar a API diretamente no host para desenvolvimento.
-
-### Comandos disponíveis
-
-Na raiz:
-
-```bash
-pnpm dev
-pnpm build
-pnpm lint
-pnpm typecheck
-```
-
-Comandos de banco:
-
-```bash
-pnpm prisma:generate
-pnpm prisma:migrate
-```
-
-## Identidade e autorização
-
-Clientes precisam de telefone, CPF válido e endereço completo para habilitar a conta. A API calcula a completude pelos dados atuais; sessões Redis guardam somente o ID e papel/titularidade são recarregados do PostgreSQL em rotas privadas. Clientes acessam os próprios registros, funcionários consultam a agenda vinculada e ações administrativas exigem ADMIN. `GET /servicos` é público.
-
-Google novo usa cookie temporário de onboarding por 30 minutos. Antes da migration, execute `pnpm --filter @petshop/backend auditoria:legado` e resolva colisões normalizadas sem mesclar contas. Crie o primeiro ADMIN localmente com `pnpm --filter @petshop/backend admin:bootstrap` e credenciais explícitas no ambiente. Veja [matriz de permissões e contratos da fase 1](docs/fase-1-identidade-autorizacao.md) e [onboarding Google](docs/google-auth.md).
-
-## API REST
-
-Todas as rotas de recursos usam JSON. A API está documentada no Swagger em `/api-docs`.
-
-| Recurso | Rotas |
+| Serviço | Endereço local |
 | --- | --- |
-| Autenticação | `POST /auth/cadastro`, `POST /auth/login`, `POST /auth/google`, `GET/PUT /auth/me`, `GET/PUT /auth/onboarding`, `POST /auth/logout` |
-| Usuários | `/usuarios` e `/usuarios/:id` — listar, criar, consultar, atualizar e remover |
-| Endereços | `/enderecos` e `/enderecos/:id` |
-| Animais | `/animais` e `/animais/:id` |
-| Fidelidades | `GET /fidelidades`, `GET /fidelidades/me`, `GET /fidelidades/:id`, `POST /fidelidades/:id/ajustes` (ADMIN) |
-| Planos | `/planos` e `/planos/:id` |
-| Assinaturas | `/assinaturas` e `/assinaturas/:id` |
-| Serviços | `/servicos` e `/servicos/:id` |
-| Funcionários | `/funcionarios` e `/funcionarios/:id` |
-| Agendamentos | `POST /agendamentos/previa`, `GET/POST /agendamentos`, `GET/PUT /agendamentos/:id`, `PATCH /agendamentos/:id/status` |
-| Disponibilidade | `GET /disponibilidade`, `GET /agendamentos/:id/disponibilidade` |
-| Configuração e bloqueios (ADMIN) | `GET/PUT /configuracao-agenda`, `GET/POST /bloqueios-agenda`, `DELETE /bloqueios-agenda/:id` |
+| Aplicação | <http://localhost:5173> |
+| API / health check | <http://localhost:3000/> |
+| Swagger | <http://localhost:3000/api-docs> |
 
-Para os recursos CRUD, exceto agendamentos e fidelidade, `GET` e `POST` são oferecidos na coleção; `GET`, `PUT` e `DELETE` são oferecidos na rota com `:id`. Consulte o Swagger para campos obrigatórios e formatos de cada entidade.
+O catálogo começa vazio. Provisione o primeiro ADMIN e cadastre serviços, profissionais e habilitações para disponibilizar horários. O [guia de desenvolvimento](docs/desenvolvimento/README.md) explica as variáveis, o bootstrap, os comandos e os testes. Para atualizar uma base existente, siga as [orientações de migração](docs/banco-de-dados/README.md#migrações).
 
-## Fidelidade automática
+## Estrutura do repositório
 
-Cada oito banhos elegíveis pagos e concluídos geram um banho gratuito. O saldo reúne os pets do tutor; benefícios acumulam sem validade e são reservados no próximo novo agendamento elegível, do mais antigo ao mais recente. Concluir consome; cancelar ou faltar devolve; reagendar preserva a reserva. O gratuito não conta para o próximo ciclo. Consultas não participam. ADMIN habilita explicitamente serviços BANHO_TOSA; combos habilitados recebem desconto integral.
+```text
+apps/
+  backend/         API Express, regras de negócio, Prisma e testes
+  frontend/        Aplicação React/Vite
+  frontend-html/   Protótipos HTML de referência
+packages/
+  eslint-config/   Configuração compartilhada de lint
+  tsconfig/        Configurações compartilhadas de TypeScript
+docs/
+  README.md        Índice da documentação
+  arquitetura/     Camadas, módulos, fluxos e permissões
+  banco-de-dados/  Modelo relacional, integridade e migrações
+  desenvolvimento/ Instalação, configuração e verificação
+  api/             Recursos, autenticação e contratos HTTP
+  assets/          Logo e origem dos recursos visuais
+  capturas/        Galeria de telas desktop e mobile
+  superpowers/     Especificações e histórico de planejamento
+skills/            Orientações de trabalho no repositório
+```
 
-O resumo usa `POST /agendamentos/previa` e envia `cotacaoEsperada` na criação. Divergência retorna `409 COTACAO_ALTERADA`, preserva o formulário e exige nova confirmação. Clientes antigos podem omitir a cotação: o servidor define o contrato efetivo. Preço base, desconto, total e elegibilidade permanecem no contrato mesmo após mudanças no catálogo.
+## Documentação
 
-As mutações genéricas `POST /fidelidades`, `PUT /fidelidades/:id` e `DELETE /fidelidades/:id` foram removidas. Ajustes exigem ADMIN, progresso final 0–7, variação inteira de benefícios disponíveis e motivo até 300 caracteres. Contadores legados fora de 0–7 fazem a migração abortar; contador/flag válidos são importados com auditoria, sem recontar históricos ou inferir elegibilidade. Registros auditáveis impedem exclusão, inclusive pelo usuário.
+- [Índice e roteiro de leitura](docs/README.md)
+- [Arquitetura do sistema](docs/arquitetura/README.md)
+- [Banco de dados e diagrama de entidades](docs/banco-de-dados/README.md)
+- [Guia de desenvolvimento e testes](docs/desenvolvimento/README.md)
+- [API e contratos HTTP](docs/api/README.md)
+- [Configuração da autenticação Google](docs/google-auth.md)
+- [Operação da agenda](docs/agenda-operacao.md)
+- [Fidelidade automática](docs/fase4-implementacao.md)
 
-Veja [contratos, permissões, modelo e migração da fase 4](docs/fase4-implementacao.md) e [validação com capturas](docs/fase4-validacao.md).
+## Licença
 
-## Modelo e integridade da agenda
-
-O schema inclui categoria/ativação de serviço, ativação de funcionário, habilitação funcionário–serviço, configuração global, bloqueios extraordinários, estados e contrato de preço/duração na reserva. Eventos registram autor, instante, ação e motivo opcional. Agendamentos legados conservam IDs e vínculos; estado inicial é AGENDADO sem inferir conclusão pela data.
-
-Criação e reagendamento calculam disponibilidade no servidor e gravam reserva/auditoria em transação. Escritas administrativas usam o mesmo lock transacional. A exclusão GiST usa intervalo semiaberto `[início, fim)` por profissional nos estados AGENDADO e CONCLUIDO; atendimentos adjacentes são permitidos e cancelamentos/faltas liberam o intervalo. Conflito retorna 409 com `HORARIO_INDISPONIVEL`. Preço, duração e titular nunca vêm do navegador.
-
-## Verificação
-
-A suíte usa PostgreSQL/Redis isolados, testa migrações vazias e legadas, disponibilidade com relógio controlado, permissões, estados, prazos e concorrência real. Comandos completos e precauções de isolamento estão em [docs/agenda-operacao.md](docs/agenda-operacao.md#verificação-isolada).
-
-## Próximas fases
-
-- Criar painel de equipe e administração sobre as APIs autorizadas.
-- Evoluir pagamentos e prontuário conforme o escopo aprovado.
-
-As telas desta fase não apresentam diagnósticos, vacinas, receitas, avaliações, fotos ou credenciais profissionais fictícias. A página inicial ainda contém conteúdo ilustrativo a revisar no escopo de apresentação.
+Este trabalho acadêmico está licenciado sob a [licença MIT](LICENSE).
